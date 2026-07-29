@@ -1,3 +1,7 @@
 {
-    "javascript.updateImportsOnPaste.enabled": true
+    "javascript.updateImportsOnPaste.enabled": true,
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend/travels"
+    ]
 }
