@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+html,
+body,
+#root,
+.app,
+body *,
+input,
+button,
+select,
+textarea {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,
+body,
+#root,
+.app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 50%, #e0f2fe 100%) !important;
+  background-attachment: fixed;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
