@@ -2,22 +2,41 @@ import os
 import urllib.parse
 from pathlib import Path
 import dj_database_url
+from dotenv import load_dotenv
+
+# Configure PyMySQL as a fallback driver for MySQL if mysqlclient is not available
+try:
+    import mysqlclient
+except ImportError:
+    try:
+        import pymysql
+        pymysql.install_as_MySQLdb()
+    except ImportError:
+        pass
+
 
 # ==============================================================================
-# PATHS CONFIGURATION
+# PATHS & ENV CONFIGURATION
 # ==============================================================================
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Load environment variables from the parent of travels/ (backend root)
+load_dotenv(BASE_DIR.parent / ".env")
+
 
 
 # ==============================================================================
 # SECURITY CONFIGURATION
 # ==============================================================================
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-u!x%7#q!+b$8$(vma2bxw#*b!*@2w!c$n$3w_9ok8-1jp_)_3h"
-)
-
 DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-u!x%7#q!+b$8$(vma2bxw#*b!*@2w!c$n$3w_9ok8-1jp_)_3h"
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("The SECRET_KEY environment variable must be set in production.")
+
 
 # Configure ALLOWED_HOSTS using environment variables with development defaults
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
@@ -137,19 +156,27 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 
 
 # ==============================================================================
-# DATABASE CONFIGURATION
+# DATABASE CONFIGURATION (MYSQL)
 # ==============================================================================
-# Keep SQLite for local development
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ.get("DB_NAME", "travels_db"),
+        "USER": os.environ.get("DB_USER", "root"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": os.environ.get("DB_PORT", "3306"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
     }
 }
 
-# Automatically use PostgreSQL when DATABASE_URL exists (e.g. on Render)
-if os.environ.get("DATABASE_URL"):
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+# Automatically use DATABASE_URL connection URL if it is a MySQL database url (compatible with Render)
+db_url = os.environ.get("DATABASE_URL")
+if db_url and (db_url.startswith("mysql://") or db_url.startswith("mysql2://")):
+    DATABASES['default'] = dj_database_url.config(default=db_url, conn_max_age=600)
+
 
 
 # ==============================================================================
