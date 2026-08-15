@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd frontend/travels && npm run build",
+  "outputDirectory": "frontend/travels/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
