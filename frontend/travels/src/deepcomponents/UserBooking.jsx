@@ -9,6 +9,7 @@ const UserBookings = ({ token, userId }) => {
   const navigate = useNavigate();
   const [trackingBookingId, setTrackingBookingId] = useState(null);
   const [helpBookingId, setHelpBookingId] = useState(null);
+  const [viewTicketBooking, setViewTicketBooking] = useState(null);
 
   const handlePrintTicket = (booking) => {
     const hasBus = !!booking.bus;
@@ -634,13 +635,14 @@ const UserBookings = ({ token, userId }) => {
                     {booking.status === 'confirmed' && (
                       <>
                         <button
-                          onClick={() => handlePrintTicket(booking)}
+                          onClick={() => setViewTicketBooking(booking)}
                           style={{
-                            padding: '6px 12px', background: '#fff', border: '1px solid #e2e8f0',
-                            borderRadius: '8px', fontSize: '11px', fontWeight: 700, color: '#475569',
-                            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            padding: '6px 14px', background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+                            border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: 800,
+                            color: '#ffffff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            boxShadow: '0 2px 8px rgba(79,70,229,0.25)'
                           }}
-                        >🖨️ Print</button>
+                        >🎟️ View Ticket</button>
                         <button
                           onClick={() => setTrackingBookingId(prev => prev === booking.id ? null : booking.id)}
                           style={{
@@ -1196,6 +1198,154 @@ const UserBookings = ({ token, userId }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ── In-App Boarding Pass Ticket View Modal ── */}
+      {viewTicketBooking && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000, padding: '16px', overflowY: 'auto'
+        }}>
+          <div style={{
+            background: '#ffffff', borderRadius: '24px', width: '100%',
+            maxWidth: '680px', boxShadow: '0 25px 60px rgba(0,0,0,0.4)',
+            border: '1px solid #e2e8f0', overflow: 'hidden', margin: 'auto'
+          }}>
+            {/* Modal Top Bar */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '16px 24px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>🎟️</span>
+                <span style={{ fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>Official Boarding Pass</span>
+              </div>
+              <button
+                onClick={() => setViewTicketBooking(null)}
+                style={{ background: '#e2e8f0', border: 'none', width: '32px', height: '32px', borderRadius: '50%', fontSize: '16px', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', justify: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Boarding Pass Ticket Content */}
+            <div style={{ padding: '24px', background: '#f8fafc' }}>
+              <div style={{
+                background: '#ffffff', borderRadius: '20px', border: '1px solid #cbd5e1',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.08)', overflow: 'hidden'
+              }}>
+                {/* Header Banner */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%)',
+                  padding: '20px 24px', color: '#ffffff', display: 'flex',
+                  justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '20px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🚌 SHRESHTA TRAVELS
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#a5b4fc', fontWeight: 700, textTransform: 'uppercase', marginTop: '2px' }}>
+                      Electronic Bus Boarding Pass
+                    </div>
+                  </div>
+                  <div style={{ background: '#fef08a', color: '#854d0e', fontSize: '11px', fontWeight: 900, padding: '4px 12px', borderRadius: '99px' }}>
+                    PNR: {viewTicketBooking.booking_reference || `BK-${viewTicketBooking.id}`}
+                  </div>
+                </div>
+
+                {/* Main Body + QR */}
+                <div style={{ padding: '20px 24px' }}>
+                  {/* Route Box */}
+                  <div style={{ background: '#f1f5f9', borderRadius: '12px', padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a' }}>{viewTicketBooking.bus?.origin || 'Origin'}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700 }}>BOARDING TERMINAL</div>
+                    </div>
+                    <div style={{ textAlign: 'center', flex: 1, padding: '0 14px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 800, color: '#4f46e5' }}>INTERCITY EXPRESS</div>
+                      <div style={{ height: '2px', background: '#c7d2fe', margin: '4px 0', position: 'relative' }}>
+                        <span style={{ position: 'absolute', top: -7, left: '45%', background: '#f1f5f9', padding: '0 3px', fontSize: '11px' }}>🚌</span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a' }}>{viewTicketBooking.bus?.destination || 'Destination'}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700 }}>DROP TERMINAL</div>
+                    </div>
+                  </div>
+
+                  {/* Grid details */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '18px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Passenger Name</div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e293b', marginTop: '2px' }}>
+                        {viewTicketBooking.user?.first_name && viewTicketBooking.user?.last_name ? `${viewTicketBooking.user.first_name} ${viewTicketBooking.user.last_name}` : (viewTicketBooking.user?.username || 'Passenger')}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Assigned Seat</div>
+                      <div style={{ background: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 900, padding: '2px 10px', borderRadius: '6px', width: 'fit-content', marginTop: '2px' }}>
+                        Seat #{viewTicketBooking.seats && viewTicketBooking.seats.length > 0 ? viewTicketBooking.seats.map(s => s.seat_number).join(', ') : 'S12'}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Bus Coach & Number</div>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', marginTop: '2px' }}>
+                        {viewTicketBooking.bus?.bus_name || 'Express Bus'} ({viewTicketBooking.bus?.number || 'EXP-1234'})
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Payment Status</div>
+                      <div style={{ fontSize: '12px', fontWeight: 800, color: '#047857', marginTop: '2px' }}>
+                        ✅ {viewTicketBooking.payment_status ? viewTicketBooking.payment_status.toUpperCase() : 'COMPLETED'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scannable QR Code Section */}
+                  <div style={{ background: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '14px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=0f172a&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(JSON.stringify({
+                        company: "SHRESHTA TRAVELS",
+                        pnr: viewTicketBooking.booking_reference || `BK-${viewTicketBooking.id}`,
+                        passenger: viewTicketBooking.user?.username || 'Passenger',
+                        route: `${viewTicketBooking.bus?.origin || 'A'} -> ${viewTicketBooking.bus?.destination || 'B'}`,
+                        fare: `INR ${viewTicketBooking.total_amount}`,
+                        status: "VERIFIED_BOARDING_PASS"
+                      }))}`}
+                      alt="Scannable Boarding QR Code"
+                      style={{ width: '130px', height: '130px', borderRadius: '10px', border: '2px solid #e2e8f0', background: '#fff' }}
+                    />
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#1e1b4b' }}>📱 Scan at Gate Terminal</div>
+                      <div style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: 900, color: '#4f46e5', margin: '4px 0' }}>
+                        #{viewTicketBooking.booking_reference || `BK-${viewTicketBooking.id}`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.4 }}>
+                        Present this live QR code at the bus terminal gate for instant check-in.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: '#ffffff', borderTop: '1px solid #f1f5f9' }}>
+              <button
+                onClick={() => setViewTicketBooking(null)}
+                style={{ padding: '10px 18px', borderRadius: '10px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                ✕ Close
+              </button>
+              <button
+                onClick={() => handlePrintTicket(viewTicketBooking)}
+                style={{ padding: '10px 22px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #4f46e5, #6366f1)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(79,70,229,0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                🖨️ Download / Print Ticket
+              </button>
+            </div>
           </div>
         </div>
       )}
