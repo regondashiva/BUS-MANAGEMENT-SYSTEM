@@ -817,32 +817,96 @@ const UserBookings = ({ token, userId }) => {
                         </div>
                       </div>
 
-                      {/* Map Simulation Panel */}
+                      {/* Real Google Map Container */}
+                      <div style={{
+                        borderRadius: '14px',
+                        overflow: 'hidden',
+                        border: '1.5px solid #334155',
+                        position: 'relative',
+                        marginBottom: '16px',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+                        height: '320px',
+                        background: '#0f172a'
+                      }}>
+                        {/* Live Overlay Badge */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          zIndex: 10,
+                          background: 'rgba(15, 23, 42, 0.92)',
+                          backdropFilter: 'blur(8px)',
+                          border: '1px solid rgba(99, 102, 241, 0.4)',
+                          borderRadius: '10px',
+                          padding: '8px 14px',
+                          color: '#fff',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.4)'
+                        }}>
+                          <span style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#10b981',
+                            display: 'inline-block',
+                            boxShadow: '0 0 8px #10b981'
+                          }} />
+                          <span>🚌 LIVE BUS POSITION: En Route ({origin} → {destination})</span>
+                        </div>
+
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          zIndex: 10,
+                          background: 'rgba(16, 185, 129, 0.9)',
+                          padding: '5px 12px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          color: '#ffffff',
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Speed: 68 km/h | 65% Completed
+                        </div>
+
+                        {/* Embedded Google Maps Frame */}
+                        <iframe
+                          title={`Google Maps - Route ${origin} to ${destination}`}
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          style={{ border: 0, filter: 'contrast(1.05) saturate(1.1)' }}
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(origin + ' to ' + destination)}&t=&z=7&ie=UTF8&iwloc=&output=embed`}
+                          allowFullScreen
+                          loading="lazy"
+                        />
+                      </div>
+
+                      {/* Waypoint Route Progress Bar */}
                       <div style={{
                         background: '#1e293b',
                         borderRadius: '12px',
-                        padding: '20px 16px',
+                        padding: '16px 16px',
                         marginBottom: '16px',
                         border: '1px solid #334155',
-                        position: 'relative',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '16px',
-                        minHeight: '120px'
+                        position: 'relative'
                       }}>
-                        <div style={{ position: 'absolute', top: '10px', right: '12px', background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '9px', color: '#10b981', fontWeight: 800 }}>
-                          ROUTE COMPLETED: 65%
+                        <div style={{ fontSize: '11px', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em' }}>
+                          🛣️ Route Checkpoints Timeline
                         </div>
-
-                        {/* Interactive Route Path */}
                         <div style={{
-                          padding: '16px 0',
+                          padding: '10px 0',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           position: 'relative',
                           width: '100%',
-                          minHeight: '80px',
                           overflowX: 'auto',
                           gap: '16px'
                         }}>
@@ -851,7 +915,7 @@ const UserBookings = ({ token, userId }) => {
                             position: 'absolute',
                             left: '30px',
                             right: '30px',
-                            top: '38px',
+                            top: '30px',
                             height: '4px',
                             background: 'linear-gradient(90deg, #10b981 65%, #475569 65%)',
                             zIndex: 1
@@ -863,12 +927,12 @@ const UserBookings = ({ token, userId }) => {
                             : [
                               { name: origin },
                               { name: 'Highway Rest Stop' },
-                              { name: 'Toll plaza' },
+                              { name: 'Toll Plaza Checkpoint' },
                               { name: destination }
                             ]
                           ).map((wp, idx, arr) => {
                             const isPassed = idx < Math.ceil(arr.length * 0.65);
-                            const isActive = idx === Math.floor(arr.length * 0.65); // current stop
+                            const isActive = idx === Math.floor(arr.length * 0.65);
 
                             return (
                               <div key={idx} style={{
@@ -880,7 +944,6 @@ const UserBookings = ({ token, userId }) => {
                                 minWidth: '90px',
                                 flex: 1
                               }}>
-                                {/* Dot stop icon */}
                                 <div style={{
                                   width: isActive ? '20px' : '14px',
                                   height: isActive ? '20px' : '14px',
