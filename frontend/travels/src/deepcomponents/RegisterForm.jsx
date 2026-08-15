@@ -9,7 +9,8 @@ const RegisterForm = () => {
     })
     const [message, setMessage] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [isFocused, setIsFocused] = useState({ username: false, email: false, password: false, password_confirm: false })
+    const [showPassword, setShowPassword] = useState(false)
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
 
     const navigate = useNavigate()
     const location = useLocation()
@@ -24,7 +25,6 @@ const RegisterForm = () => {
         setIsLoading(true)
         setMessage('')
 
-        // Frontend match validation check
         if (form.password !== form.password_confirm) {
             setMessage("Registration failed: Passwords do not match.")
             setIsLoading(false)
@@ -37,7 +37,7 @@ const RegisterForm = () => {
             setForm({ username: '', email: '', password: '', password_confirm: '' })
             setTimeout(() => {
                 navigate('/login', { state: { from } })
-            }, 1800)
+            }, 1500)
 
         } catch (error) {
             console.error(error.response?.data)
@@ -53,395 +53,178 @@ const RegisterForm = () => {
     }
 
     return (
-        <div style={{
-            minHeight: 'calc(100vh - 64px)',
-            display: 'flex',
-            alignItems: 'stretch',
-            background: '#f8fafc',
-            fontFamily: "'Inter', sans-serif"
-        }}>
-            {/* Split Screen - Left Graphic Column */}
-            <div style={{
-                flex: 1.2,
-                position: 'relative',
-                display: 'none', // hidden on mobile
-                background: '#090d1f',
-                color: '#fff',
-                overflow: 'hidden',
-                justifyContent: 'center',
-                alignItems: 'center',
-                '@media (min-width: 1024px)': {
-                    display: 'flex'
-                }
-            }} className="hidden md:flex">
-                <img
-                    src="/luxury-login.png"
-                    alt="Luxury Bus Travel"
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        opacity: '0.45',
-                        mixBlendMode: 'luminosity'
-                    }}
-                />
+        <div className="h-[calc(100vh-64px)] w-full flex items-center justify-center bg-slate-950 text-slate-100 relative overflow-hidden px-4 font-sans box-border">
+            {/* Ambient Background Glow */}
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-slate-800/20 blur-[130px] rounded-full pointer-events-none" />
 
-                {/* Neon gradient overlay */}
-                <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.85) 0%, rgba(79,70,229,0.9) 50%, rgba(49,46,129,0.95) 100%)',
-                }} />
-
-                {/* Left side content */}
-                <div style={{
-                    position: 'relative',
-                    zIndex: 10,
-                    maxWidth: '480px',
-                    padding: '40px',
-                    textAlign: 'left'
-                }}>
-                    <div style={{
-                        display: 'inline-flex',
-                        background: 'rgba(255,255,255,0.15)',
-                        backdropFilter: 'blur(10px)',
-                        padding: '8px 16px',
-                        borderRadius: '999px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        marginBottom: '24px',
-                        border: '1px solid rgba(255,255,255,0.2)'
-                    }}>
-                        ✨ Join SHRESHTA TRAVELS Today
-                    </div>
-
-                    <h1 style={{
-                        fontSize: '3rem',
-                        fontWeight: 900,
-                        lineHeight: 1.15,
-                        color: '#fff',
-                        marginBottom: '16px',
-                        letterSpacing: '-0.03em'
-                    }}>
-                        Unlock Premium <br />
-                        Booking <span style={{ color: '#a5b4fc', textShadow: '0 0 10px rgba(165,180,252,0.4)' }}>Benefits</span>.
-                    </h1>
-
-                    <p style={{
-                        fontSize: '1.1rem',
-                        lineHeight: 1.6,
-                        color: '#c7d2fe',
-                        marginBottom: '40px',
-                        fontWeight: 400
-                    }}>
-                        Create an account to book your choice of sleeper status seats, get cancellation refund privileges, and view instant ticket receipts.
-                    </p>
-
-                    {/* Quality Badges */}
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                        <div style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '16px',
-                            padding: '16px',
-                            minWidth: '120px'
-                        }}>
-                            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>10K+</div>
-                            <div style={{ fontSize: '11px', color: '#a5b4fc', fontWeight: 600 }}>Active Travelers</div>
-                        </div>
-                        <div style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '16px',
-                            padding: '16px',
-                            minWidth: '120px'
-                        }}>
-                            <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>Secure</div>
-                            <div style={{ fontSize: '11px', color: '#a5b4fc', fontWeight: 600 }}>SSL Cryptography</div>
-                        </div>
-                    </div>
+            {/* Main Shadcn Card */}
+            <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-xl p-6 sm:p-7 relative z-10 transition-all duration-300">
+                {/* Back to Home Link */}
+                <div className="mb-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/')}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/40 px-2.5 py-1 rounded-lg transition-all"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Home
+                    </button>
                 </div>
-            </div>
 
-            {/* Split Screen - Right Form Column */}
-            <div style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '40px 24px',
-                background: '#fff'
-            }}>
-                <div style={{
-                    width: '100%',
-                    maxWidth: '420px',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    {/* Back Button */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <button
-                            type="button"
-                            onClick={() => navigate('/')}
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                background: '#f1f5f9',
-                                border: 'none',
-                                color: '#475569',
-                                fontWeight: 700,
-                                fontSize: '13px',
-                                cursor: 'pointer',
-                                padding: '8px 14px',
-                                borderRadius: '8px',
-                                transition: 'background-color 0.2s',
-                                width: 'fit-content'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e2e8f0'}
-                            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                        >
-                            ← Back to Home
-                        </button>
+                {/* Card Header & Brand Icon */}
+                <div className="flex flex-col items-center text-center mb-5">
+                    <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-white mb-2.5 shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-xl font-bold tracking-tight text-white">Create an account</h1>
+                    <p className="text-xs text-slate-400 mt-1">Enter your details below to create your account</p>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    {/* Username Input */}
+                    <div className="space-y-1 text-left">
+                        <label htmlFor="username" className="text-[11px] font-medium text-slate-300 block">
+                            Username
+                        </label>
+                        <input
+                            id="username"
+                            name="username"
+                            type="text"
+                            required
+                            placeholder="johndoe"
+                            className="w-full px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400/50 transition-all text-xs"
+                            value={form.username}
+                            onChange={handleChange}
+                        />
                     </div>
 
-                    {/* Header */}
-                    <div style={{ marginBottom: '32px' }}>
-                        <h2 style={{
-                            fontSize: '2rem',
-                            fontWeight: 800,
-                            color: '#1e293b',
-                            letterSpacing: '-0.025em',
-                            marginBottom: '8px'
-                        }}>
-                            Create Account
-                        </h2>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>
-                            Sign up to start booking your luxury coach tickets
-                        </p>
+                    {/* Email Input */}
+                    <div className="space-y-1 text-left">
+                        <label htmlFor="email" className="text-[11px] font-medium text-slate-300 block">
+                            Email address
+                        </label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            placeholder="name@example.com"
+                            className="w-full px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400/50 transition-all text-xs"
+                            value={form.email}
+                            onChange={handleChange}
+                        />
                     </div>
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {/* Username */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label htmlFor="username" style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                color: isFocused.username ? '#6366f1' : '#475569',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}>
-                                Username
-                            </label>
-                            <input
-                                id="username"
-                                name="username"
-                                type="text"
-                                required
-                                placeholder="Choose a username"
-                                onFocus={() => setIsFocused(prev => ({ ...prev, username: true }))}
-                                onBlur={() => setIsFocused(prev => ({ ...prev, username: false }))}
-                                style={{
-                                    padding: '10px 14px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${isFocused.username ? '#6366f1' : '#cbd5e1'}`,
-                                    fontSize: '14px',
-                                    color: '#1e293b',
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                                    boxShadow: isFocused.username ? '0 0 0 3px rgba(99,102,241,0.12)' : 'none'
-                                }}
-                                value={form.username}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        {/* Email */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label htmlFor="email" style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                color: isFocused.email ? '#6366f1' : '#475569',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}>
-                                Email Address
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                required
-                                placeholder="name@domain.com"
-                                onFocus={() => setIsFocused(prev => ({ ...prev, email: true }))}
-                                onBlur={() => setIsFocused(prev => ({ ...prev, email: false }))}
-                                style={{
-                                    padding: '10px 14px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${isFocused.email ? '#6366f1' : '#cbd5e1'}`,
-                                    fontSize: '14px',
-                                    color: '#1e293b',
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                                    boxShadow: isFocused.email ? '0 0 0 3px rgba(99,102,241,0.12)' : 'none'
-                                }}
-                                value={form.email}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        {/* Password */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label htmlFor="password" style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                color: isFocused.password ? '#6366f1' : '#475569',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}>
-                                Password
-                            </label>
+                    {/* Password Input */}
+                    <div className="space-y-1 text-left">
+                        <label htmlFor="password" className="text-[11px] font-medium text-slate-300 block">
+                            Password
+                        </label>
+                        <div className="relative">
                             <input
                                 id="password"
                                 name="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
                                 placeholder="Minimum 8 characters"
-                                onFocus={() => setIsFocused(prev => ({ ...prev, password: true }))}
-                                onBlur={() => setIsFocused(prev => ({ ...prev, password: false }))}
-                                style={{
-                                    padding: '10px 14px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${isFocused.password ? '#6366f1' : '#cbd5e1'}`,
-                                    fontSize: '14px',
-                                    color: '#1e293b',
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                                    boxShadow: isFocused.password ? '0 0 0 3px rgba(99,102,241,0.12)' : 'none'
-                                }}
+                                className="w-full pl-3.5 pr-10 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400/50 transition-all text-xs"
                                 value={form.password}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+                            >
+                                {showPassword ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
+                    </div>
 
-                        {/* Confirm Password */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label htmlFor="password_confirm" style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                color: isFocused.password_confirm ? '#6366f1' : '#475569',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}>
-                                Confirm Password
-                            </label>
+                    {/* Confirm Password Input */}
+                    <div className="space-y-1 text-left">
+                        <label htmlFor="password_confirm" className="text-[11px] font-medium text-slate-300 block">
+                            Confirm password
+                        </label>
+                        <div className="relative">
                             <input
                                 id="password_confirm"
                                 name="password_confirm"
-                                type="password"
+                                type={showPasswordConfirm ? 'text' : 'password'}
                                 required
                                 placeholder="Re-type password"
-                                onFocus={() => setIsFocused(prev => ({ ...prev, password_confirm: true }))}
-                                onBlur={() => setIsFocused(prev => ({ ...prev, password_confirm: false }))}
-                                style={{
-                                    padding: '10px 14px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${isFocused.password_confirm ? '#6366f1' : '#cbd5e1'}`,
-                                    fontSize: '14px',
-                                    color: '#1e293b',
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                                    boxShadow: isFocused.password_confirm ? '0 0 0 3px rgba(99,102,241,0.12)' : 'none'
-                                }}
+                                className="w-full pl-3.5 pr-10 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400/50 transition-all text-xs"
                                 value={form.password_confirm}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+                            >
+                                {showPasswordConfirm ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                )}
+                            </button>
                         </div>
-
-                        {/* Feedback message */}
-                        {message && (
-                            <div style={{
-                                padding: '12px 16px',
-                                borderRadius: '10px',
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                background: message.includes('successful') ? '#f0fdf4' : '#fef2f2',
-                                border: `1.5px solid ${message.includes('successful') ? '#86efac' : '#fca5a5'}`,
-                                color: message.includes('successful') ? '#15803d' : '#dc2626',
-                                transition: 'all 0.3s'
-                            }}>
-                                {message}
-                            </div>
-                        )}
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: '8px',
-                                background: isLoading ? '#a5b4fc' : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                                color: '#fff',
-                                padding: '12px',
-                                borderRadius: '10px',
-                                border: 'none',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                cursor: isLoading ? 'not-allowed' : 'pointer',
-                                boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
-                                transition: 'opacity 0.2s',
-                                marginTop: '10px'
-                            }}
-                            onMouseEnter={e => { if (!isLoading) e.currentTarget.style.opacity = '0.9' }}
-                            onMouseLeave={e => { if (!isLoading) e.currentTarget.style.opacity = '1' }}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <div style={{
-                                        width: '18px', height: '18px',
-                                        border: '2px solid rgba(255,255,255,0.3)',
-                                        borderTop: '2px solid #fff',
-                                        borderRadius: '50%',
-                                        animation: 'spin 0.6s linear infinite'
-                                    }} />
-                                    <span>Registering...</span>
-                                </>
-                            ) : (
-                                <span>Sign Up</span>
-                            )}
-                        </button>
-                    </form>
-
-                    {/* Bottom link to Login */}
-                    <div style={{
-                        marginTop: '24px',
-                        textAlign: 'center',
-                        fontSize: '14px',
-                        color: '#64748b'
-                    }}>
-                        Already have an account?{' '}
-                        <Link to="/login" state={{ from }} style={{
-                            color: '#6366f1',
-                            fontWeight: 700,
-                            textDecoration: 'none'
-                        }}>
-                            Sign In
-                        </Link>
                     </div>
+
+                    {/* Feedback Alert */}
+                    {message && (
+                        <div className={`p-2.5 rounded-xl text-xs font-semibold border ${message.includes('successful')
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                            } transition-all`}>
+                            {message}
+                        </div>
+                    )}
+
+                    {/* Primary Button */}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                    >
+                        {isLoading ? (
+                            <>
+                                <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-slate-950 rounded-full animate-spin" />
+                                <span>Registering...</span>
+                            </>
+                        ) : (
+                            <span>Create account</span>
+                        )}
+                    </button>
+                </form>
+
+                {/* Footer Section */}
+                <div className="mt-4 pt-3.5 border-t border-slate-800/80 text-center text-xs text-slate-400">
+                    Already have an account?{' '}
+                    <Link to="/login" state={{ from }} className="text-slate-200 hover:text-white font-medium underline underline-offset-4 transition-colors">
+                        Sign in
+                    </Link>
                 </div>
             </div>
-            <style>{`
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     )
 }

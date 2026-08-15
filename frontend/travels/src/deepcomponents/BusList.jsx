@@ -123,79 +123,44 @@ const BusList = ({ token }) => {
                         </p>
 
                         {/* CTA Buttons */}
-                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <div className="flex gap-4 flex-wrap justify-center items-center">
                             <button
                                 onClick={() => setShowBuses(true)}
-                                style={{
-                                    padding: '14px 36px',
-                                    background: 'linear-gradient(135deg, #6366f1, #818cf8)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    fontSize: '16px',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    boxShadow: '0 8px 32px rgba(99,102,241,0.5)',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.transform = 'translateY(-2px)'
-                                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(99,102,241,0.65)'
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = 'translateY(0)'
-                                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(99,102,241,0.5)'
-                                }}
+                                className="px-8 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-[0_0_30px_rgba(99,102,241,0.45)] hover:shadow-[0_0_40px_rgba(99,102,241,0.7)] border border-indigo-400/30 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] flex items-center gap-3 cursor-pointer group text-base"
                             >
-                                🔍 Browse Buses
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-200 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <span>Browse Buses</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-indigo-300 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
                             </button>
                             {!token && (
                                 <button
                                     onClick={() => navigate('/register')}
-                                    style={{
-                                        padding: '14px 36px',
-                                        background: 'rgba(255,255,255,0.12)',
-                                        color: '#fff',
-                                        border: '1px solid rgba(255,255,255,0.3)',
-                                        borderRadius: '12px',
-                                        fontSize: '16px',
-                                        fontWeight: 700,
-                                        cursor: 'pointer',
-                                        backdropFilter: 'blur(8px)',
-                                        transition: 'background 0.2s, transform 0.2s',
-                                    }}
-                                    onMouseEnter={e => {
-                                        e.currentTarget.style.background = 'rgba(255,255,255,0.22)'
-                                        e.currentTarget.style.transform = 'translateY(-2px)'
-                                    }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
-                                        e.currentTarget.style.transform = 'translateY(0)'
-                                    }}
+                                    className="px-8 py-3.5 rounded-2xl font-semibold text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-700/60 hover:border-slate-500/80 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] flex items-center gap-2.5 cursor-pointer text-base"
                                 >
-                                    Get Started Free
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                    </svg>
+                                    <span>Get Started Free</span>
                                 </button>
                             )}
                         </div>
 
                         {/* Stats bar */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '48px',
-                            marginTop: '60px',
-                            flexWrap: 'wrap',
-                            justifyContent: 'center',
-                        }}>
+                        <div className="flex gap-6 sm:gap-10 mt-12 flex-wrap justify-center items-center">
                             {[
                                 { value: '50+', label: 'Routes' },
                                 { value: '10K+', label: 'Happy Travelers' },
                                 { value: '99%', label: 'On-Time Rate' },
                             ].map(stat => (
-                                <div key={stat.label} style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                                <div key={stat.label} className="text-center px-6 py-3 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-md shadow-lg transition-transform hover:scale-105">
+                                    <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
                                         {stat.value}
                                     </div>
-                                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                    <div className="text-[11px] text-slate-400 mt-1.5 uppercase tracking-widest font-semibold">
                                         {stat.label}
                                     </div>
                                 </div>
@@ -213,13 +178,14 @@ const BusList = ({ token }) => {
                     overflow: 'hidden',
                     boxSizing: 'border-box'
                 }}>
-                    {/* Header and Filter area (Static, doesn't scroll) */}
+                    {/* Header and Filter area (Static, doesn't shrink on mobile) */}
                     <div style={{
-                        padding: '24px 24px 16px 24px',
-                        background: 'rgba(255, 255, 255, 0.4)',
-                        backdropFilter: 'blur(12px)',
-                        borderBottom: '1px solid rgba(226, 232, 240, 0.5)',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                        padding: '16px 20px',
+                        background: 'rgba(255, 255, 255, 0.7)',
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
                         flexShrink: 0
                     }}>
                         <div style={{
@@ -227,7 +193,7 @@ const BusList = ({ token }) => {
                             margin: '0 auto',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '16px'
+                            gap: '12px'
                         }}>
                             {/* Inner header bar */}
                             <div style={{
@@ -242,14 +208,14 @@ const BusList = ({ token }) => {
                                         alignItems: 'center',
                                         gap: '6px',
                                         background: '#f1f5f9',
-                                        border: 'none',
-                                        padding: '8px 16px',
-                                        borderRadius: '8px',
+                                        border: '1px solid #e2e8f0',
+                                        padding: '7px 14px',
+                                        borderRadius: '10px',
                                         color: '#475569',
                                         fontWeight: 600,
-                                        fontSize: '14px',
+                                        fontSize: '13px',
                                         cursor: 'pointer',
-                                        transition: 'background 0.2s',
+                                        transition: 'all 0.2s',
                                     }}
                                     onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
                                     onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
@@ -259,44 +225,46 @@ const BusList = ({ token }) => {
 
                                 <div style={{ textAlign: 'right' }}>
                                     <h2 style={{
-                                        fontSize: '1.25rem',
+                                        fontSize: '1.1rem',
                                         fontWeight: 800,
                                         color: '#1e293b',
                                         margin: 0
                                     }}>
                                         Available Buses
                                     </h2>
-                                    <p style={{ color: '#64748b', fontSize: '12px', margin: '2px 0 0 0' }}>
+                                    <p className="hidden sm:block" style={{ color: '#64748b', fontSize: '11px', margin: '2px 0 0 0' }}>
                                         Reserve seats on premium intercity coaches
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Filter Bar Controls */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                                gap: '16px',
-                                alignItems: 'end',
-                            }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {/* Filter Bar Controls - Horizontally Scrollable on Mobile, Grid on Desktop */}
+                            <div
+                                className="flex overflow-x-auto gap-3 pb-1 pt-1 md:grid md:grid-cols-4 md:overflow-x-visible"
+                                style={{
+                                    alignItems: 'end',
+                                    WebkitOverflowScrolling: 'touch',
+                                    scrollbarWidth: 'thin'
+                                }}
+                            >
+                                <div className="flex-shrink-0 min-w-[200px] md:min-w-0 md:flex-shrink">
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                         Search
                                     </label>
                                     <input
                                         type="text"
                                         placeholder="Bus name or number..."
-                                        style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                                        style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #cbd5e1', borderRadius: '10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#ffffff' }}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <div className="flex-shrink-0 min-w-[160px] md:min-w-0 md:flex-shrink">
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                         From
                                     </label>
                                     <select
-                                        style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+                                        style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #cbd5e1', borderRadius: '10px', fontSize: '13px', outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
                                         value={filterOrigin}
                                         onChange={(e) => setFilterOrigin(e.target.value)}
                                     >
@@ -306,12 +274,12 @@ const BusList = ({ token }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <div className="flex-shrink-0 min-w-[160px] md:min-w-0 md:flex-shrink">
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                         To
                                     </label>
                                     <select
-                                        style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fff', boxSizing: 'border-box' }}
+                                        style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #cbd5e1', borderRadius: '10px', fontSize: '13px', outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
                                         value={filterDestination}
                                         onChange={(e) => setFilterDestination(e.target.value)}
                                     >
@@ -321,24 +289,28 @@ const BusList = ({ token }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <button
-                                    onClick={() => { setSearchTerm(''); setFilterOrigin(''); setFilterDestination('') }}
-                                    style={{
-                                        padding: '10px 20px',
-                                        background: '#f1f5f9',
-                                        border: '1.5px solid #e2e8f0',
-                                        borderRadius: '10px',
-                                        fontSize: '14px',
-                                        fontWeight: 600,
-                                        color: '#475569',
-                                        cursor: 'pointer',
-                                        transition: 'background 0.2s',
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
-                                    onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
-                                >
-                                    ✕ Clear Filters
-                                </button>
+                                <div className="flex-shrink-0 min-w-[130px] md:min-w-0 md:flex-shrink">
+                                    <button
+                                        onClick={() => { setSearchTerm(''); setFilterOrigin(''); setFilterDestination('') }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '9px 16px',
+                                            background: '#f1f5f9',
+                                            border: '1.5px solid #cbd5e1',
+                                            borderRadius: '10px',
+                                            fontSize: '13px',
+                                            fontWeight: 600,
+                                            color: '#475569',
+                                            cursor: 'pointer',
+                                            whiteSpace: 'nowrap',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
+                                        onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
+                                    >
+                                        ✕ Clear Filters
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

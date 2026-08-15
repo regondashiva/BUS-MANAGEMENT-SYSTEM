@@ -67,36 +67,76 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-indigo-100/30 shadow-sm sticky top-0 z-50">
+      <nav className="sticky top-0 z-50 transition-all duration-300" style={{
+        background: 'rgba(10, 15, 30, 0.88)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(99, 102, 241, 0.18)',
+        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.4)'
+      }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-16 items-center">
             {/* Left side navigation */}
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-3 sm:space-x-8">
               <Link
                 to="/"
-                className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 group transition-transform duration-200 hover:scale-[1.02]"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                <span className="text-xl font-bold">SHRESHTA TRAVELS</span>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2))',
+                  border: '1px solid rgba(129, 140, 248, 0.3)',
+                  boxShadow: '0 0 15px rgba(99, 102, 241, 0.25)'
+                }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-400 group-hover:text-indigo-300 transition-colors"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                    />
+                  </svg>
+                </div>
+                <span className="text-sm sm:text-lg font-extrabold tracking-wide" style={{
+                  background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #818cf8 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                }}>
+                  SHRESHTA TRAVELS
+                </span>
               </Link>
 
               {token && (
                 <Link
                   to='/my-bookings'
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={{
+                    color: '#cbd5e1',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(129, 140, 248, 0.3)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = '#cbd5e1';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  }}
                 >
                   My Bookings
                 </Link>
@@ -117,12 +157,13 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                       gap: '12px',
                       padding: '6px 14px',
                       borderRadius: '999px',
-                      border: dropdownOpen ? '1px solid #dee2e6' : '1px solid #f1f3f5',
-                      background: dropdownOpen ? '#f8f9fa' : '#ffffff',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                      border: dropdownOpen ? '1px solid rgba(129, 140, 248, 0.5)' : '1px solid rgba(255, 255, 255, 0.12)',
+                      background: dropdownOpen ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.07)',
+                      backdropFilter: 'blur(12px)',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.25)',
                       transition: 'all 0.2s ease-in-out'
                     }}
-                    className="cursor-pointer select-none hover:bg-gray-50 hover:border-gray-300"
+                    className="cursor-pointer select-none hover:border-indigo-400/40 hover:bg-white/10"
                   >
                     {/* Avatar Circle with Status Dot */}
                     <div style={{ position: 'relative', display: 'flex' }}>
@@ -135,26 +176,26 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                         borderRadius: '50%',
                         background: user.is_staff
                           ? 'linear-gradient(135deg, #f43f5e, #be123c)'
-                          : 'linear-gradient(135deg, #4f46e5, #3730a3)',
+                          : 'linear-gradient(135deg, #6366f1, #4f46e5)',
                         color: '#ffffff',
                         fontWeight: 750,
                         fontSize: '14px',
                         textTransform: 'uppercase',
                         boxShadow: user.is_staff
-                          ? '0 0 0 2px #fecdd3, 0 2px 6px rgba(220, 38, 38, 0.25)'
-                          : '0 0 0 2px #dbeafe, 0 2px 6px rgba(79, 70, 229, 0.25)',
+                          ? '0 0 0 2px rgba(244, 63, 94, 0.3), 0 2px 8px rgba(220, 38, 38, 0.4)'
+                          : '0 0 0 2px rgba(99, 102, 241, 0.3), 0 2px 8px rgba(79, 70, 229, 0.4)',
                       }}>
                         {user.username ? user.username.charAt(0) : 'U'}
                       </div>
                       {/* Active Status Badge Pulse Dot */}
                       <span
-                        className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-green-500 animate-pulse"
+                        className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-slate-900 bg-emerald-400 animate-pulse"
                         style={{ bottom: '-1px', right: '-1px' }}
                       />
                     </div>
 
                     <div className="hidden sm:flex flex-col text-left">
-                      <span style={{ color: '#1e293b', fontSize: '13px', fontWeight: 700, lineHeight: 1.2 }}>
+                      <span style={{ color: '#f8fafc', fontSize: '13px', fontWeight: 700, lineHeight: 1.2 }}>
                         {user.first_name && user.last_name
                           ? `${user.first_name} ${user.last_name}`
                           : user.username}
@@ -164,7 +205,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                         fontWeight: 800,
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
-                        color: user.is_staff ? '#ef4444' : '#6366f1',
+                        color: user.is_staff ? '#fb7185' : '#818cf8',
                         marginTop: '3px',
                         lineHeight: 1
                       }}>
@@ -214,11 +255,11 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                           top: '52px',
                           right: 0,
                           width: '240px',
-                          background: 'rgba(255, 255, 255, 0.98)',
-                          backdropFilter: 'blur(12px)',
-                          border: '1px solid rgba(226, 232, 240, 0.8)',
+                          background: 'rgba(15, 23, 42, 0.95)',
+                          backdropFilter: 'blur(16px)',
+                          border: '1px solid rgba(51, 65, 85, 0.8)',
                           borderRadius: '16px',
-                          boxShadow: '0 12px 30px rgba(0,0,0,0.12)',
+                          boxShadow: '0 16px 36px rgba(0,0,0,0.5)',
                           padding: '10px',
                           zIndex: 45,
                           display: 'flex',
@@ -230,7 +271,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                       >
                         <div style={{
                           padding: '10px 12px 12px 12px',
-                          borderBottom: '1px solid #f1f5f9',
+                          borderBottom: '1px solid #334155',
                           marginBottom: '6px',
                           textAlign: 'left'
                         }}>
@@ -239,7 +280,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                           </div>
                           <div style={{
                             fontSize: '13px',
-                            color: '#0f172a',
+                            color: '#f8fafc',
                             fontWeight: 700,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -251,8 +292,8 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                           <span style={{
                             fontSize: '10px',
                             fontWeight: 700,
-                            color: user.is_staff ? '#ef4444' : '#6366f1',
-                            background: user.is_staff ? '#fef2f2' : '#e0e7ff',
+                            color: user.is_staff ? '#fb7185' : '#818cf8',
+                            background: user.is_staff ? 'rgba(244, 63, 94, 0.15)' : 'rgba(99, 102, 241, 0.15)',
                             padding: '3px 10px',
                             borderRadius: '999px',
                             display: 'inline-block',
@@ -280,17 +321,17 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                             borderRadius: '8px',
                             fontSize: '13px',
                             fontWeight: 600,
-                            color: '#334155',
+                            color: '#cbd5e1',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = '#f1f5f9';
-                            e.currentTarget.style.color = '#4f46e5';
+                            e.currentTarget.style.background = 'rgba(51, 65, 85, 0.6)';
+                            e.currentTarget.style.color = '#818cf8';
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.background = 'none';
-                            e.currentTarget.style.color = '#334155';
+                            e.currentTarget.style.color = '#cbd5e1';
                           }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
@@ -316,17 +357,17 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                             borderRadius: '8px',
                             fontSize: '13px',
                             fontWeight: 600,
-                            color: '#334155',
+                            color: '#cbd5e1',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = '#f1f5f9';
-                            e.currentTarget.style.color = '#4f46e5';
+                            e.currentTarget.style.background = 'rgba(51, 65, 85, 0.6)';
+                            e.currentTarget.style.color = '#818cf8';
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.background = 'none';
-                            e.currentTarget.style.color = '#334155';
+                            e.currentTarget.style.color = '#cbd5e1';
                           }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
@@ -335,7 +376,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                           Profile Settings
                         </button>
 
-                        <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }}></div>
+                        <div style={{ height: '1px', background: '#334155', margin: '4px 0' }}></div>
 
                         <button
                           onClick={() => {
@@ -354,12 +395,12 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                             borderRadius: '8px',
                             fontSize: '13px',
                             fontWeight: 600,
-                            color: '#e11d48',
+                            color: '#fb7185',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = '#fff1f2';
+                            e.currentTarget.style.background = 'rgba(244, 63, 94, 0.15)';
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.background = 'none';
@@ -381,25 +422,25 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                   </div>
                 </div>
               ) : (
-                <>
+                <div className="flex items-center gap-2.5">
                   <Link
                     to="/register"
-                    className="px-4 py-2 rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all border border-slate-700/40 hover:border-slate-600"
                   >
                     Register
                   </Link>
                   <Link
                     to="/login"
-                    className="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-950 bg-white hover:bg-slate-100 transition-all shadow-sm active:scale-[0.98]"
                   >
                     Login
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
-      </nav >
+      </nav>
 
       {/* Main content */}
       < main className="flex-grow w-full" >
@@ -489,7 +530,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                 {/* Form Input fields */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {/* First & Last Name row */}
-                  <div style={{ display: 'flex', gap: '16px' }}>
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
                         First Name
@@ -634,17 +675,17 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
 
       {/* Footer */}
       {
-        !isHomePage && (
-          <footer className="bg-white border-t border-gray-200">
+        !isHomePage && location.pathname !== '/login' && location.pathname !== '/register' && (
+          <footer className="bg-slate-950 border-t border-slate-800/80">
             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-              <p className="text-center text-gray-500 text-sm">
-                &copy; {new Date().getFullYear()} TravelEase. All rights reserved.
+              <p className="text-center text-slate-400 text-sm font-medium">
+                &copy; {new Date().getFullYear()} SHRESHTA TRAVELS. All rights reserved.
               </p>
             </div>
           </footer>
         )
       }
-    </div >
+    </div>
   );
 };
 
