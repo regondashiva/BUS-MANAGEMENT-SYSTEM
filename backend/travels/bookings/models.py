@@ -160,6 +160,7 @@ class Seat(models.Model):
     column = models.PositiveIntegerField()
     price_multiplier = models.FloatField(default=1.0)
     is_women_only = models.BooleanField(default=False)  # For ladies' seats
+    booked_by_gender = models.CharField(max_length=10, blank=True, null=True, default=None, choices=(('female', 'Female'), ('male', 'Male')))
     
     class Meta:
         unique_together = ('bus', 'seat_number')

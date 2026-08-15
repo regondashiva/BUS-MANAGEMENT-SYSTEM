@@ -9,9 +9,11 @@ const BusSeats = ({ token }) => {
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
     const [selectedSeat, setSelectedSeat] = useState(null)
+    const [passengerGender, setPassengerGender] = useState('female') // 'female' or 'male'
+    const [lockTimer, setLockTimer] = useState(0) // 5 minutes (300 seconds)
     const [booking, setBooking] = useState(false)
     const [bookingMsg, setBookingMsg] = useState(null)
-    const [paymentMethod, setPaymentMethod] = useState('upi')
+    const [paymentMethod, setPaymentMethod] = useState('razorpay')
 
     const { busId } = useParams()
     const navigate = useNavigate()
@@ -31,72 +33,194 @@ const BusSeats = ({ token }) => {
         fetchBusDetails()
     }, [busId])
 
-    const handleSelectSeat = (seat) => {
-        if (!token) { navigate('/login', { state: { from: `/bus/${busId}` } }); return }
-        if (seat.is_booked) return
-        setSelectedSeat(prev => prev?.id === seat.id ? null : seat)
-        setBookingMsg(null)
-    }
+    // Live 5-minute countdown timer effect for selected seat
+    useEffect(() => {
+        if (!selectedSeat || lockTimer <= 0) return;
+        const timerInterval = setInterval(() => {
+            setLockTimer(prev => {
+                if (prev <= 1) {
+                    setSelectedSeat(null);
+                    setBookingMsg({ type: 'error', text: '⏰ 5-minute seat reservation expired. Please re-select your seat.' });
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timerInterval);
+    }, [selectedSeat, lockTimer]);
+
+    const formatTimer = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
+    // Helper: Find adjacent seat in pair (Column 1-2 pair, Column 3-4 pair)
+    const getAdjacentSeat = (targetSeat, allSeats) => {
+        const targetCol = targetSeat.column || ((targetSeat.seat_number.charCodeAt(targetSeat.seat_number.length - 1) % 4) + 1);
+        let adjCol = null;
+        if (targetCol === 1) adjCol = 2;
+        else if (targetCol === 2) adjCol = 1;
+        else if (targetCol === 3) adjCol = 4;
+        else if (targetCol === 4) adjCol = 3;
+
+        return allSeats.find(s => s.row === targetSeat.row && (s.column === adjCol || s.id !== targetSeat.id));
+    };
+
+    // Female/Male Seat Validation Rule
+    const isSeatBlockedForGender = (seat, gender, allSeats) => {
+        if (gender === 'female') return false; // Females can book any available seat
+
+        // If Male selected:
+        // Rule: If seat is marked Women Only or booked by Female -> BLOCK MALE
+        if (seat.is_women_only || seat.booked_by_gender === 'female') {
+            return 'This seat is reserved for Female travelers 👧.';
+        }
+
+        // Check adjacent seat in pair
+        const adjSeat = getAdjacentSeat(seat, allSeats);
+        if (adjSeat && (adjSeat.is_women_only || adjSeat.booked_by_gender === 'female')) {
+            return 'Adjacent seat is booked by a Female passenger 👧. Only Female travelers can book this seat.';
+        }
+
+        return false;
+    };
+
+    const handleSelectSeat = async (seat) => {
+        if (!token) { navigate('/login', { state: { from: `/bus/${busId}` } }); return; }
+        if (seat.is_booked) return;
+
+        // Check if seat is locked by another user
+        const now = new Date();
+        if (seat.is_locked && seat.locked_until && new Date(seat.locked_until) > now && selectedSeat?.id !== seat.id) {
+            setBookingMsg({ type: 'error', text: '🔒 Seat is currently locked by another passenger for 5 minutes.' });
+            return;
+        }
+
+        // Validate Female / Male booking rule
+        const blockReason = isSeatBlockedForGender(seat, passengerGender, seats);
+        if (blockReason) {
+            setBookingMsg({
+                type: 'error',
+                text: `⛔ Selection Blocked: ${blockReason}`
+            });
+            return;
+        }
+
+        // If clicking already selected seat -> unlock
+        if (selectedSeat?.id === seat.id) {
+            setSelectedSeat(null);
+            setLockTimer(0);
+            try {
+                await axios.post(`${API_BASE_URL}/api/buses/${busId}/unlock_seat/`, { seat_id: seat.id }, {
+                    headers: { Authorization: `Token ${token}` }
+                });
+            } catch (e) {}
+            return;
+        }
+
+        // Lock seat for 5 minutes on backend
+        setBookingMsg(null);
+        try {
+            await axios.post(`${API_BASE_URL}/api/buses/${busId}/lock_seat/`, { seat_id: seat.id }, {
+                headers: { Authorization: `Token ${token}` }
+            });
+            setSelectedSeat(seat);
+            setLockTimer(300); // 5 minutes timer
+            setSeats(prev => prev.map(s => s.id === seat.id ? { ...s, is_locked: true } : s));
+        } catch (err) {
+            setSelectedSeat(seat);
+            setLockTimer(300);
+        }
+    };
 
     const handleConfirmBooking = async () => {
-        if (!token) { navigate('/login', { state: { from: `/bus/${busId}` } }); return }
-        if (!selectedSeat) return
-        setBooking(true); setBookingMsg(null)
+        if (!token) { navigate('/login', { state: { from: `/bus/${busId}` } }); return; }
+        if (!selectedSeat) return;
+        setBooking(true); setBookingMsg(null);
         try {
             await axios.post(`${API_BASE_URL}/api/bookings/`, {
-                seat_ids: [selectedSeat.id], bus_id: parseInt(busId), payment_method: paymentMethod,
-            }, { headers: { Authorization: `Token ${token}` } })
-            setBookingMsg({ type: 'success', text: `Seat ${selectedSeat.seat_number} booked! 🎉` })
-            setSeats(prev => prev.map(s => s.id === selectedSeat.id ? { ...s, is_booked: true } : s))
-            setSelectedSeat(null)
+                seat_ids: [selectedSeat.id],
+                bus_id: parseInt(busId),
+                payment_method: paymentMethod,
+                passenger_gender: passengerGender
+            }, { headers: { Authorization: `Token ${token}` } });
+
+            setBookingMsg({ type: 'success', text: `Seat ${selectedSeat.seat_number} booked successfully! 🎉` });
+            setSeats(prev => prev.map(s => s.id === selectedSeat.id ? {
+                ...s, is_booked: true, booked_by_gender: passengerGender, is_locked: false
+            } : s));
+            setSelectedSeat(null);
+            setLockTimer(0);
         } catch (err) {
-            setBookingMsg({ type: 'error', text: err.response?.data?.error || 'Booking failed.' })
-        } finally { setBooking(false) }
-    }
+            setBookingMsg({ type: 'error', text: err.response?.data?.error || 'Booking failed.' });
+        } finally { setBooking(false); }
+    };
 
     if (isLoading) return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
             <div style={{ width: '44px', height: '44px', border: '4px solid #e0e7ff', borderTop: '4px solid #6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
-    )
+    );
 
     if (error) return (
         <div style={{ padding: '40px', textAlign: 'center', color: '#dc2626' }}>
             <div style={{ fontSize: '36px' }}>⚠️</div>
             <p style={{ fontWeight: 600 }}>{error}</p>
         </div>
-    )
+    );
 
-    const availableCount = seats.filter(s => !s.is_booked).length
-    const bookedCount = seats.filter(s => s.is_booked).length
+    const availableCount = seats.filter(s => !s.is_booked && !s.is_locked).length;
+    const bookedCount = seats.filter(s => s.is_booked).length;
     const sortedSeats = [...seats].sort((a, b) =>
         String(a.seat_number).localeCompare(String(b.seat_number), undefined, { numeric: true })
-    )
-    const rows = []
-    for (let i = 0; i < sortedSeats.length; i += 4) rows.push(sortedSeats.slice(i, i + 4))
+    );
+    const rows = [];
+    for (let i = 0; i < sortedSeats.length; i += 4) rows.push(sortedSeats.slice(i, i + 4));
 
     const renderSeatButton = (seat) => {
-        const isSelected = selectedSeat?.id === seat.id
-        let bg = '#d1fae5', border = '#34d399', color = '#065f46', cursor = 'pointer'
-        if (seat.is_booked) { bg = '#fee2e2'; border = '#fca5a5'; color = '#991b1b'; cursor = 'not-allowed' }
-        if (isSelected) { bg = '#fef9c3'; border = '#fbbf24'; color = '#92400e' }
+        const isSelected = selectedSeat?.id === seat.id;
+        const now = new Date();
+        const isLockedByOther = seat.is_locked && seat.locked_until && new Date(seat.locked_until) > now && !isSelected;
+
+        let bg = '#d1fae5', border = '#34d399', color = '#065f46', cursor = 'pointer', icon = null;
+
+        if (seat.is_booked) {
+            if (seat.booked_by_gender === 'female' || seat.is_women_only) {
+                bg = '#fbcfe8'; border = '#f472b6'; color = '#831843'; icon = '👧';
+            } else {
+                bg = '#e0e7ff'; border = '#818cf8'; color = '#312e81'; icon = '👦';
+            }
+            cursor = 'not-allowed';
+        } else if (isLockedByOther) {
+            bg = '#fef08a'; border = '#eab308'; color = '#854d0e'; icon = '🔒'; cursor = 'not-allowed';
+        } else if (isSelected) {
+            bg = '#fef9c3'; border = '#fbbf24'; color = '#92400e'; icon = '⏱️';
+        }
+
+        const titleText = !token ? 'Login to book'
+            : seat.is_booked ? `Booked by ${seat.booked_by_gender || 'passenger'}`
+            : isLockedByOther ? 'In progress (Locked for 5 min)'
+            : `Seat ${seat.seat_number}`;
+
         return (
-            <button key={seat.id} onClick={() => handleSelectSeat(seat)} disabled={seat.is_booked}
-                title={!token ? 'Login to book' : seat.is_booked ? 'Already booked' : `Seat ${seat.seat_number}`}
+            <button key={seat.id} onClick={() => handleSelectSeat(seat)} disabled={seat.is_booked || isLockedByOther}
+                title={titleText}
                 style={{
-                    width: '42px', height: '42px', background: bg, border: `2px solid ${border}`,
-                    borderRadius: '8px 8px 4px 4px', fontSize: '11px', fontWeight: 800, color, cursor,
+                    width: '44px', height: '44px', background: bg, border: `2px solid ${border}`,
+                    borderRadius: '9px 9px 5px 5px', fontSize: '11px', fontWeight: 800, color, cursor,
                     transition: 'all 0.15s', transform: isSelected ? 'scale(1.1)' : 'scale(1)',
-                    boxShadow: isSelected ? '0 0 8px rgba(251,191,36,0.6)' : 'inset 0 -2px 0 rgba(0,0,0,0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+                    boxShadow: isSelected ? '0 0 10px rgba(251,191,36,0.7)' : 'inset 0 -2px 0 rgba(0,0,0,0.1)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative',
                 }}
             >
-                <div style={{ position: 'absolute', top: '3px', left: '3px', right: '3px', height: '5px', background: 'rgba(255,255,255,0.4)', borderRadius: '2px' }} />
-                {seat.seat_number}
+                <div style={{ position: 'absolute', top: '2px', left: '3px', right: '3px', height: '4px', background: 'rgba(255,255,255,0.5)', borderRadius: '2px' }} />
+                <span>{seat.seat_number}</span>
+                {icon && <span style={{ fontSize: '9px', lineHeight: 1 }}>{icon}</span>}
             </button>
-        )
-    }
+        );
+    };
 
     const AMENITY_MAP = {
         'ac': { label: 'A/C', icon: '❄️' }, 'charging': { label: 'Charging', icon: '🔌' },
@@ -104,8 +228,8 @@ const BusSeats = ({ token }) => {
         'water': { label: 'Water', icon: '🥤' }, 'tv': { label: 'TV', icon: '📺' },
         'toilet': { label: 'Washroom', icon: '🚻' }, 'snacks': { label: 'Snacks', icon: '🍪' },
         'usb': { label: 'USB', icon: '⚡' }, 'wheelchair': { label: 'Accessible', icon: '♿' },
-    }
-    const amenityKeys = (bus?.amenities && bus.amenities.length > 0) ? bus.amenities : ['ac', 'charging', 'water']
+    };
+    const amenityKeys = (bus?.amenities && bus.amenities.length > 0) ? bus.amenities : ['ac', 'charging', 'water'];
 
     return (
         <div style={{ padding: '14px 16px 32px 16px', maxWidth: '1100px', margin: '0 auto' }}>
@@ -239,7 +363,6 @@ const BusSeats = ({ token }) => {
                         )}
                     </div>
 
-                    {/* Login warning (shown on left for guests) */}
                     {!token && (
                         <div style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: '10px', padding: '11px 14px', color: '#92400e', fontSize: '12px', fontWeight: 600 }}>
                             ⚠️ Please <button onClick={() => navigate('/login')} style={{ color: '#6366f1', background: 'none', border: 'none', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>login</button> to book a seat.
@@ -250,23 +373,69 @@ const BusSeats = ({ token }) => {
                 {/* ════ RIGHT PANEL — Seat Map + Booking ════ */}
                 <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
+                    {/* Gender Selection Bar */}
+                    <div style={{
+                        background: '#ffffff', borderRadius: '14px', border: '1.5px solid #e2e8f0',
+                        padding: '14px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px'
+                    }}>
+                        <div>
+                            <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Passenger Gender Selection
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                                {passengerGender === 'female' ? '👧 Female selected: You can book any seat' : '👦 Male selected: Seats adjacent to Females are blocked'}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={() => setPassengerGender('female')}
+                                style={{
+                                    padding: '8px 14px', borderRadius: '10px',
+                                    border: passengerGender === 'female' ? '2px solid #f472b6' : '1px solid #e2e8f0',
+                                    background: passengerGender === 'female' ? '#fbcfe8' : '#fff',
+                                    color: passengerGender === 'female' ? '#831843' : '#64748b',
+                                    fontSize: '12px', fontWeight: 800, cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: '5px'
+                                }}
+                            >
+                                👧 Female
+                            </button>
+                            <button
+                                onClick={() => setPassengerGender('male')}
+                                style={{
+                                    padding: '8px 14px', borderRadius: '10px',
+                                    border: passengerGender === 'male' ? '2px solid #818cf8' : '1px solid #e2e8f0',
+                                    background: passengerGender === 'male' ? '#e0e7ff' : '#fff',
+                                    color: passengerGender === 'male' ? '#312e81' : '#64748b',
+                                    fontSize: '12px', fontWeight: 800, cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: '5px'
+                                }}
+                            >
+                                👦 Male
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Seat Map Card */}
                     <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e8edf2', padding: '18px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
                         <h2 style={{ fontSize: '15px', fontWeight: 800, color: '#1e293b', margin: '0 0 4px 0', textAlign: 'center' }}>Select Your Seat</h2>
                         <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', marginBottom: '16px', marginTop: 0 }}>
-                            {token ? <>Click a seat then confirm below</> : <>Login required to book</>}
+                            {token ? <>Click a seat to lock for 5 minutes then confirm</> : <>Login required to book</>}
                         </p>
 
                         {/* Legend */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginBottom: '18px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '18px', flexWrap: 'wrap' }}>
                             {[
                                 { color: '#d1fae5', border: '#34d399', label: 'Available' },
-                                { color: '#fee2e2', border: '#fca5a5', label: 'Booked' },
-                                { color: '#fef9c3', border: '#fbbf24', label: 'Selected' },
+                                { color: '#fbcfe8', border: '#f472b6', label: 'Female Booked 👧' },
+                                { color: '#e0e7ff', border: '#818cf8', label: 'Male Booked 👦' },
+                                { color: '#fef08a', border: '#eab308', label: 'In-Progress (Locked 5m) 🔒' },
+                                { color: '#fef9c3', border: '#fbbf24', label: 'Your Selection ⏱️' },
                             ].map(item => (
                                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     <div style={{ width: '13px', height: '13px', background: item.color, border: `2px solid ${item.border}`, borderRadius: '3px' }} />
-                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>{item.label}</span>
+                                    <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600 }}>{item.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -290,13 +459,13 @@ const BusSeats = ({ token }) => {
                                         <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'flex-start' }}>
                                             {rowArr[0] && renderSeatButton(rowArr[0])}
                                             {rowArr[1] && renderSeatButton(rowArr[1])}
-                                            {!rowArr[1] && <div style={{ width: '42px' }} />}
+                                            {!rowArr[1] && <div style={{ width: '44px' }} />}
                                         </div>
                                         <div style={{ width: '16px', textAlign: 'center', color: '#cbd5e1', fontSize: '10px', userSelect: 'none' }}>⋮</div>
                                         <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'flex-end' }}>
                                             {rowArr[2] && renderSeatButton(rowArr[2])}
                                             {rowArr[3] && renderSeatButton(rowArr[3])}
-                                            {!rowArr[3] && <div style={{ width: '42px' }} />}
+                                            {!rowArr[3] && <div style={{ width: '44px' }} />}
                                         </div>
                                     </div>
                                 ))}
@@ -313,9 +482,17 @@ const BusSeats = ({ token }) => {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
-                                    <div style={{ fontSize: '10px', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '2px' }}>Seat Selected</div>
-                                    <div style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>Seat #{selectedSeat.seat_number}</div>
-                                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>{bus?.origin} → {bus?.destination}</div>
+                                    <div style={{ fontSize: '10px', color: '#6366f1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '2px' }}>
+                                        Seat Selected ({passengerGender === 'female' ? '👧 Female' : '👦 Male'})
+                                    </div>
+                                    <div style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b' }}>
+                                        Seat #{selectedSeat.seat_number}
+                                    </div>
+                                    {lockTimer > 0 && (
+                                        <div style={{ fontSize: '11px', color: '#d97706', fontWeight: 800, marginTop: '2px' }}>
+                                            ⏱️ Locked for 5 min (Expires in {formatTimer(lockTimer)})
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{ background: '#fff', padding: '8px 14px', borderRadius: '10px', border: '1px solid #c7d2fe', textAlign: 'right' }}>
                                     <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Total Fare</div>
@@ -353,17 +530,17 @@ const BusSeats = ({ token }) => {
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                <button onClick={() => setSelectedSeat(null)} style={{
+                                <button onClick={() => { setSelectedSeat(null); setLockTimer(0); }} style={{
                                     padding: '9px 18px', background: '#fff', border: '1.5px solid #c7d2fe',
-                                    borderRadius: '9px', fontSize: '13px', fontWeight: 700, color: '#6366f1', cursor: 'pointer',
+                                    borderRadius: '99px', fontSize: '13px', fontWeight: 700, color: '#6366f1', cursor: 'pointer',
                                 }}>Cancel</button>
                                 <button onClick={handleConfirmBooking} disabled={booking} style={{
                                     padding: '9px 22px', background: booking ? '#a5b4fc' : 'linear-gradient(135deg, #6366f1, #818cf8)',
-                                    border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: 700,
+                                    border: 'none', borderRadius: '99px', fontSize: '13px', fontWeight: 700,
                                     color: '#fff', cursor: booking ? 'not-allowed' : 'pointer',
                                     boxShadow: '0 3px 12px rgba(99,102,241,0.35)',
                                 }}>
-                                    {booking ? 'Booking...' : '✓ Confirm Booking'}
+                                    {booking ? 'Booking...' : '✓ Confirm & Lock Seat'}
                                 </button>
                             </div>
                         </div>
@@ -393,7 +570,7 @@ const BusSeats = ({ token }) => {
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default BusSeats
+export default BusSeats;

@@ -210,8 +210,16 @@ class BookingViewSet(ModelViewSet):
             )
             booking.seats.set(seats)
             
-            # Mark seats as booked
-            seats.update(is_booked=True)
+            passenger_gender = data.get('passenger_gender', 'female' if any(s.is_women_only for s in seats) else 'male')
+            
+            # Mark seats as booked with passenger gender
+            for s in seats:
+                s.is_booked = True
+                s.is_locked = False
+                s.locked_until = None
+                s.locked_by = None
+                s.booked_by_gender = passenger_gender
+                s.save()
             
             serializer = self.get_serializer(booking)
             return Response(serializer.data, status=status.HTTP_201_CREATED)

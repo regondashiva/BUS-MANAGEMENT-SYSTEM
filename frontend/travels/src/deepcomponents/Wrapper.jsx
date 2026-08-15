@@ -108,34 +108,25 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                     />
                   </svg>
                 </div>
-                <span className="text-sm sm:text-lg font-extrabold tracking-wide" style={{
+                <span className="text-xs sm:text-lg font-extrabold tracking-wide whitespace-nowrap" style={{
                   background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #818cf8 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
                 }}>
-                  SHRESHTA TRAVELS
+                  <span className="hidden sm:inline">SHRESHTA TRAVELS</span>
+                  <span className="sm:hidden">SHRESHTA</span>
                 </span>
               </Link>
 
               {token && (
                 <Link
                   to='/my-bookings'
-                  className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                  className="px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap"
                   style={{
                     color: '#cbd5e1',
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.08)'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.color = '#ffffff';
-                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
-                    e.currentTarget.style.borderColor = 'rgba(129, 140, 248, 0.3)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.color = '#cbd5e1';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                   }}
                 >
                   My Bookings

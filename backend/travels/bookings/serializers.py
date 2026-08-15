@@ -37,7 +37,8 @@ class SeatSerializer(serializers.ModelSerializer):
         model = Seat
         fields = [
             'id', 'seat_number', 'seat_type', 'is_booked', 'is_locked', 
-            'row', 'column', 'price_multiplier', 'locked_by', 'price'
+            'row', 'column', 'price_multiplier', 'locked_by', 'price',
+            'booked_by_gender', 'is_women_only', 'locked_until'
         ]
         read_only_fields = ['id', 'is_booked', 'is_locked', 'locked_by']
     
