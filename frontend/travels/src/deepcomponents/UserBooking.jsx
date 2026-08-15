@@ -534,82 +534,79 @@ const UserBookings = ({ token, userId }) => {
               <div
                 key={booking.id}
                 style={{
-                  background: '#fff', borderRadius: '14px',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid #e8edf2',
-                  overflow: 'hidden',
+                  background: '#ffffff', borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0',
+                  overflow: 'hidden', transition: 'all 0.2s ease',
                 }}
               >
-                {/* Compact top bar: ref + status */}
+                {/* Top header bar: Bus name & status */}
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: '#f8fafc', borderBottom: '1px solid #f1f5f9',
-                  padding: '7px 14px', flexWrap: 'wrap', gap: '6px'
+                  background: '#f8fafc', borderBottom: '1px solid #e2e8f0',
+                  padding: '10px 16px', flexWrap: 'wrap', gap: '8px'
                 }}>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', letterSpacing: '0.04em' }}>
-                    #{booking.booking_reference || `BK-${booking.id}`}
-                  </span>
-                  <span style={{
-                    background: statusBg, color: statusColor,
-                    fontSize: '10px', fontWeight: 800, padding: '2px 9px',
-                    borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.04em'
-                  }}>{booking.status || 'Pending'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#1e293b' }}>{busName}</span>
+                    <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 700, background: '#e2e8f0', padding: '2px 7px', borderRadius: '6px' }}>#{busNo}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', fontFamily: 'monospace' }}>
+                      #{booking.booking_reference || `BK-${booking.id}`}
+                    </span>
+                    <span style={{
+                      background: statusBg, color: statusColor,
+                      fontSize: '10px', fontWeight: 800, padding: '3px 10px',
+                      borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.05em'
+                    }}>{booking.status || 'Pending'}</span>
+                  </div>
                 </div>
 
-                {/* Card body */}
-                <div style={{ padding: '12px 14px' }}>
-                  {/* Bus name + route in one row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e293b' }}>{busName}</div>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500 }}>#{busNo}</div>
+                {/* Card Body */}
+                <div style={{ padding: '16px' }}>
+                  {/* Route & Timing banner */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#f1f5f9', borderRadius: '12px', padding: '12px 16px',
+                    marginBottom: '14px', flexWrap: 'wrap', gap: '10px'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a' }}>{origin}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700, marginTop: '1px' }}>Boarding Terminal</div>
                     </div>
-                    {/* Route strip inline */}
-                    <div style={{
-                      flex: 1, display: 'flex', alignItems: 'center', gap: '6px',
-                      background: '#f8fafc', borderRadius: '8px', padding: '6px 10px', minWidth: '180px'
-                    }}>
-                      <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>{origin}</div>
-                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>From</div>
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <div style={{ flex: 1, height: '1.5px', background: '#c7d2fe' }} />
-                        <span style={{ fontSize: '12px' }}>🚌</span>
-                        <div style={{ flex: 1, height: '1.5px', background: '#c7d2fe' }} />
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>{destination}</div>
-                        <div style={{ fontSize: '9px', color: '#94a3b8' }}>To</div>
+
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '120px', padding: '0 10px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 800, color: '#6366f1' }}>{formattedDate}</div>
+                      <div style={{ width: '100%', height: '2px', background: '#c7d2fe', margin: '4px 0', position: 'relative' }}>
+                        <span style={{ position: 'absolute', top: -7, left: '42%', background: '#f1f5f9', padding: '0 3px', fontSize: '11px' }}>🚌</span>
                       </div>
                     </div>
-                    {/* Fare badge */}
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: '17px', fontWeight: 900, color: '#4f46e5', lineHeight: 1 }}>₹{totalAmount}</div>
-                      <div style={{ fontSize: '9px', color: '#94a3b8' }}>Fare</div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a' }}>{destination}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700, marginTop: '1px' }}>Destination Terminal</div>
                     </div>
                   </div>
 
-                  {/* Info pills row */}
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                    <span style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, color: '#334155' }}>
-                      🪑 Seat: {seatNumbers}
-                    </span>
-                    <span style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, color: '#334155' }}>
-                      📅 {formattedDate}
-                    </span>
-                    <span style={{
-                      background: booking.payment_status === 'completed' ? '#ecfdf5' : '#fffbeb',
-                      border: `1px solid ${booking.payment_status === 'completed' ? '#bbf7d0' : '#fde68a'}`,
-                      borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 700,
-                      color: booking.payment_status === 'completed' ? '#059669' : '#d97706'
-                    }}>
-                      💳 {booking.payment_method ? booking.payment_method.replace('_', ' ').toUpperCase() : 'COD'} · {booking.payment_status || 'Pending'}
-                    </span>
-                    {booking.journey_date && (
-                      <span style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, color: '#3b82f6' }}>
-                        🗓️ Journey: {booking.journey_date}
+                  {/* Info Row: Seat, Payment, Fare */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ background: '#4f46e5', color: '#ffffff', borderRadius: '8px', padding: '4px 10px', fontSize: '12px', fontWeight: 800 }}>
+                        🪑 Seat: {seatNumbers}
                       </span>
-                    )}
+                      <span style={{
+                        background: booking.payment_status === 'completed' ? '#ecfdf5' : '#fffbeb',
+                        border: `1px solid ${booking.payment_status === 'completed' ? '#a7f3d0' : '#fde68a'}`,
+                        borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontWeight: 800,
+                        color: booking.payment_status === 'completed' ? '#047857' : '#d97706'
+                      }}>
+                        💳 {booking.payment_method ? booking.payment_method.replace('_', ' ').toUpperCase() : 'COD'} · {booking.payment_status === 'completed' ? 'PAID' : 'PENDING'}
+                      </span>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Total Amount</div>
+                      <div style={{ fontSize: '18px', fontWeight: 900, color: '#10b981', lineHeight: 1.1 }}>₹{totalAmount}</div>
+                    </div>
                   </div>
 
                   {/* CTA Action buttons */}

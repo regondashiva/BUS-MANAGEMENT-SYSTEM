@@ -42,18 +42,31 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
-        username = request.data.get('username')
+        login_input = (request.data.get('username') or request.data.get('email') or '').strip()
         password = request.data.get('password')
-        user = authenticate(username=username, password=password)
 
-        if user:
-            token, created = Token.objects.get_or_create(user=user)
+        if not login_input or not password:
+            return Response(
+                {'error': 'Please enter your username/email and password.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Allow logging in by either Email or Username (case-insensitive)
+        user_obj = None
+        if '@' in login_input:
+            user_obj = User.objects.filter(email__iexact=login_input).first()
+        if not user_obj:
+            user_obj = User.objects.filter(username__iexact=login_input).first()
+
+        if user_obj and user_obj.check_password(password):
+            token, _ = Token.objects.get_or_create(user=user_obj)
             return Response({
                 'token': token.key,
-                'user': UserSerializer(user).data
+                'user': UserSerializer(user_obj).data
             }, status=status.HTTP_200_OK)
+
         return Response(
-            {'error': 'Invalid Credentials'}, 
+            {'error': 'Invalid username/email or password.'}, 
             status=status.HTTP_401_UNAUTHORIZED
         )
 
