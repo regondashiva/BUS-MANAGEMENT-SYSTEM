@@ -7,7 +7,7 @@ services:
     startCommand: cd travels && gunicorn travels.wsgi:application
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.12.2
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
