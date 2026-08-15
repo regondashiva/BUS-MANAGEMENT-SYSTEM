@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaBus, FaUser, FaCalendarAlt, FaMapMarkerAlt, FaClock, FaChair, FaMoneyBillWave, FaInfoCircle, FaTimes, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBooking } from '../../contexts/BookingContext';
+import { API_BASE_URL } from '../../config';
 import './BookingHistory.css';
 
 const BookingHistory = () => {
@@ -33,14 +34,14 @@ const BookingHistory = () => {
         
         // Get all bookings
         const [upcomingResponse, pastResponse] = await Promise.all([
-          fetch('http://localhost:8000/api/bookings/upcoming/', {
+          fetch(`${API_BASE_URL}/api/bookings/upcoming/`, {
             headers: {
               'Authorization': `Token ${token}`,
               'Content-Type': 'application/json',
             },
             credentials: 'include'
           }),
-          fetch('http://localhost:8000/api/bookings/past/', {
+          fetch(`${API_BASE_URL}/api/bookings/past/`, {
             headers: {
               'Authorization': `Token ${token}`,
               'Content-Type': 'application/json',

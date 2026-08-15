@@ -2,6 +2,7 @@ import axios from 'axios'
 import React, {useState, useEffect} from 'react'
 import { useParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 
 
 const BusSeats = ({token}) => {
@@ -16,7 +17,7 @@ const BusSeats = ({token}) => {
     useEffect(()=>{
         const fetchBusDetails = async()=>{
             try {
-                const response = await axios(`http://localhost:8000/api/buses/${busId}`)
+                const response = await axios(`${API_BASE_URL}/api/buses/${busId}`)
                 setBus(response.data)
                 setSeats(response.data.seats || [])
             } catch (error) {
@@ -33,7 +34,7 @@ const BusSeats = ({token}) => {
             return;
         }
         try {
-            const response = await axios.post("http://localhost:8000/api/booking/",
+            const response = await axios.post(`${API_BASE_URL}/api/booking/`,
                 {seat:seatId},
                 {
                     headers:{

@@ -1,5 +1,6 @@
 import React, {use, useState} from 'react'
 import axios from 'axios'
+import { API_BASE_URL } from '../config'
 
 const RegisterForm = () => {
     const [form, setForm] = useState({
@@ -14,7 +15,7 @@ const RegisterForm = () => {
     const handleSubmit =async(e)=>{
         e.preventDefault()
         try {
-            await axios.post('http://localhost:8000/api/register/', form);
+            await axios.post(`${API_BASE_URL}/api/register/`, form);
             setMessage('Registration successful')
         } catch (error) {
             setMessage(`Registration failed: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`)

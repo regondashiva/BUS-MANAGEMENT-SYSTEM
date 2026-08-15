@@ -1,5 +1,6 @@
 import React, {use, useState} from 'react'
 import axios from 'axios'
+import { API_BASE_URL } from '../config'
 
 const LoginForm = ({onLogin}) => {
     const [form, setForm] = useState({
@@ -14,7 +15,7 @@ const LoginForm = ({onLogin}) => {
 const handleSubmit =async(e)=>{
     e.preventDefault()
     try {
-        const response = await axios.post('http://localhost:8000/api/login/', form)
+        const response = await axios.post(`${API_BASE_URL}/api/login/`, form)
         setMessage('Login Success')
 
         if(onLogin){

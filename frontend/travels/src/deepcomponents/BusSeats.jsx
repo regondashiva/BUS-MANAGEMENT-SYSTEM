@@ -1,6 +1,7 @@
 import axios from 'axios'
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 
 const BusSeats = ({ token }) => {
     const [bus, setBus] = useState(null)
@@ -18,7 +19,7 @@ const BusSeats = ({ token }) => {
     useEffect(() => {
         const fetchBusDetails = async () => {
             try {
-                const response = await axios(`http://localhost:8000/api/buses/${busId}/`)
+                const response = await axios(`${API_BASE_URL}/api/buses/${busId}/`)
                 setBus(response.data)
                 setSeats(response.data.seats || [])
             } catch (err) {
@@ -42,7 +43,7 @@ const BusSeats = ({ token }) => {
         if (!selectedSeat) return
         setBooking(true); setBookingMsg(null)
         try {
-            await axios.post('http://localhost:8000/api/bookings/', {
+            await axios.post(`${API_BASE_URL}/api/bookings/`, {
                 seat_ids: [selectedSeat.id], bus_id: parseInt(busId), payment_method: paymentMethod,
             }, { headers: { Authorization: `Token ${token}` } })
             setBookingMsg({ type: 'success', text: `Seat ${selectedSeat.seat_number} booked! 🎉` })

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 
 const LoginForm = ({ onLogin }) => {
     const [form, setForm] = useState({
@@ -23,7 +24,7 @@ const LoginForm = ({ onLogin }) => {
         setIsLoading(true)
         setMessage('')
         try {
-            const response = await axios.post('http://localhost:8000/api/login/', form)
+            const response = await axios.post(`${API_BASE_URL}/api/login/`, form)
             setMessage('Login Success! Redirecting...')
             if (onLogin) {
                 onLogin(response.data.token, response.data.user)

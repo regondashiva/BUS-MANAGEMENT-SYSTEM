@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config'
 
 const BusList = ({ token }) => {
     const [buses, setBuses] = useState([])
@@ -16,7 +17,7 @@ const BusList = ({ token }) => {
     useEffect(() => {
         const fetchBuses = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/api/buses/")
+                const response = await axios.get(`${API_BASE_URL}/api/buses/`)
                 setBuses(response.data)
             } catch (error) {
                 console.log('error in fetching buses', error)

@@ -172,9 +172,9 @@ DATABASES = {
     }
 }
 
-# Automatically use DATABASE_URL connection URL if it is a MySQL database url (compatible with Render)
+# Automatically use DATABASE_URL connection URL if set (supports PostgreSQL and MySQL on cloud platforms like Render)
 db_url = os.environ.get("DATABASE_URL")
-if db_url and (db_url.startswith("mysql://") or db_url.startswith("mysql2://")):
+if db_url:
     DATABASES['default'] = dj_database_url.config(default=db_url, conn_max_age=600)
 
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
     setMessage(null);
     try {
       const response = await axios.put(
-        'http://localhost:8000/api/profile/',
+        `${API_BASE_URL}/api/profile/`,
         profileForm,
         { headers: { Authorization: `Token ${token}` } }
       );
