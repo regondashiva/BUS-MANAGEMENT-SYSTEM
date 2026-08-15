@@ -29,17 +29,10 @@ load_dotenv(BASE_DIR.parent / ".env")
 # ==============================================================================
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
-if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = "django-insecure-u!x%7#q!+b$8$(vma2bxw#*b!*@2w!c$n$3w_9ok8-1jp_)_3h"
-    else:
-        from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured("The SECRET_KEY environment variable must be set in production.")
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-u!x%7#q!+b$8$(vma2bxw#*b!*@2w!c$n$3w_9ok8-1jp_)_3h")
 
-
-# Configure ALLOWED_HOSTS using environment variables with development defaults
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# Configure ALLOWED_HOSTS using environment variables with development & production defaults
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", ".onrender.com", ".vercel.app"]
 env_hosts = os.environ.get("ALLOWED_HOSTS")
 if env_hosts:
     ALLOWED_HOSTS.extend([h.strip() for h in env_hosts.split(",") if h.strip()])
@@ -47,8 +40,8 @@ if env_hosts:
 # Secure proxy SSL header for Render deployment
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Production-specific security settings (only active when DEBUG=False)
-if not DEBUG:
+# Production-specific security settings (only active when explicitly configured)
+if not DEBUG and os.environ.get("ENFORCE_SSL", "False") == "True":
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -145,11 +138,17 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-csrftoken',
 ]
 
-# CSRF trusted origins from environment variables
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-    "CSRF_TRUSTED_ORIGINS",
-    ""
-).split(",") if os.environ.get("CSRF_TRUSTED_ORIGINS") else []
+# CSRF trusted origins with defaults for Vercel and local development
+CSRF_TRUSTED_ORIGINS = [
+    "https://bus-management-system-six.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+]
+env_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS")
+if env_csrf:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in env_csrf.split(",") if origin.strip()])
 
 # Razorpay Credentials (Free Test Credentials for Sandbox / Test Mode)
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_5Wq2c0L0zQv23P")
