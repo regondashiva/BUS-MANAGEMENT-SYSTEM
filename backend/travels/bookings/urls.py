@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     RegisterView, LoginView, UserProfileView,
-    BusViewSet, BookingViewSet, UserBookingView
+    BusViewSet, BookingViewSet, UserBookingView, SeedDatabaseView
 )
 
 # Create a router and register our viewsets with it
@@ -17,4 +17,5 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('profile/', UserProfileView.as_view(), name='user-profile'),
     path('user/<int:user_id>/bookings/', UserBookingView.as_view(), name='user-bookings'),
+    path('seed-database/', SeedDatabaseView.as_view(), name='seed-database'),
 ]

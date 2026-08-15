@@ -33,6 +33,14 @@ const App = () => {
     setSelectedBusId(null);
   };
 
+  // Auto-seed database on app startup if needed
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/seed-database/`)
+      .then(res => res.json())
+      .then(data => console.log('Database auto-seed check:', data))
+      .catch(err => console.log('Database auto-seed check skipped:', err));
+  }, []);
+
   // Verify auth token & fetch user profile on app start / token change
   useEffect(() => {
     if (!token) return;
