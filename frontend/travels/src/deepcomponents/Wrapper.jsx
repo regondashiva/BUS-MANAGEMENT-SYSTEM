@@ -67,35 +67,19 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 transition-all duration-300" style={{
-        background: 'rgba(10, 15, 30, 0.88)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.18)',
-        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.4)'
-      }}>
+      <nav className="sticky top-0 z-50 transition-all duration-300 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             {/* Left side navigation */}
-            <div className="flex items-center space-x-3 sm:space-x-8">
+            <div className="flex items-center space-x-3 sm:space-x-6">
               <Link
                 to="/"
-                className="flex items-center gap-2 sm:gap-3 group transition-transform duration-200 hover:scale-[1.02]"
+                className="flex items-center gap-2.5 group transition-transform duration-200 hover:opacity-95"
               >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2))',
-                  border: '1px solid rgba(129, 140, 248, 0.3)',
-                  boxShadow: '0 0 15px rgba(99, 102, 241, 0.25)'
-                }}>
+                <div className="w-8 h-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600/30 transition-all shadow-sm">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-400 group-hover:text-indigo-300 transition-colors"
+                    className="h-4 w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -108,12 +92,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
                     />
                   </svg>
                 </div>
-                <span className="text-xs sm:text-lg font-extrabold tracking-wide whitespace-nowrap" style={{
-                  background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #818cf8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                }}>
+                <span className="text-sm sm:text-base font-extrabold tracking-tight text-white">
                   <span className="hidden sm:inline">SHRESHTA TRAVELS</span>
                   <span className="sm:hidden">SHRESHTA</span>
                 </span>
@@ -122,12 +101,7 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
               {token && (
                 <Link
                   to='/my-bookings'
-                  className="px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap"
-                  style={{
-                    color: '#cbd5e1',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)'
-                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-900/60 transition-all whitespace-nowrap"
                 >
                   My Bookings
                 </Link>
@@ -135,37 +109,34 @@ const Wrapper = ({ token, user, onUserUpdate, handleLogout, children }) => {
             </div>
 
             {/* Right side navigation */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               {token && user ? (
                 <div className="relative">
                   {/* Profile info trigger button */}
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 hover:border-indigo-500/60 hover:bg-slate-800/90 shadow-xl backdrop-blur-xl transition-all duration-200 cursor-pointer select-none group"
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-900/40 border border-slate-800/80 hover:bg-slate-900/80 hover:border-slate-700 transition-all cursor-pointer select-none group"
                   >
                     {/* Avatar Circle with Status Pulse Dot */}
                     <div className="relative flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md ring-2 ring-indigo-500/40 group-hover:ring-indigo-400 group-hover:scale-105 transition-all">
+                      <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shadow-sm ring-1 ring-indigo-400/40">
                         {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                       </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse" />
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse" />
                     </div>
 
                     <div className="hidden sm:flex flex-col text-left pr-1">
-                      <span className="text-xs font-bold text-slate-100 group-hover:text-white transition-colors leading-tight">
+                      <span className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors leading-tight">
                         {user.first_name && user.last_name
                           ? `${user.first_name} ${user.last_name}`
                           : user.username}
-                      </span>
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-indigo-400 leading-none mt-0.5">
-                        {user.is_staff ? 'Administrator' : 'Passenger'}
                       </span>
                     </div>
 
                     {/* Chevron Indicator */}
                     <svg
-                      className={`w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-indigo-400' : ''}`}
+                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-indigo-400' : ''}`}
                       fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />

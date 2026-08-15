@@ -12,14 +12,14 @@ const UserBookings = ({ token, userId }) => {
 
   const handlePrintTicket = (booking) => {
     const hasBus = !!booking.bus;
-    const busName = hasBus ? booking.bus.bus_name : 'Express Travels';
+    const busName = hasBus ? booking.bus.bus_name : 'Shreshta Travels Express';
     const busNo = hasBus ? booking.bus.number : 'EXP-1234';
-    const origin = hasBus ? booking.bus.origin : 'N/A';
-    const destination = hasBus ? booking.bus.destination : 'N/A';
-    const totalAmount = booking.total_amount || (hasBus ? booking.bus.price : 'N/A');
+    const origin = hasBus ? booking.bus.origin : 'Bengaluru';
+    const destination = hasBus ? booking.bus.destination : 'Mumbai';
+    const totalAmount = booking.total_amount || (hasBus ? booking.bus.price : '1200.00');
     const seatNumbers = booking.seats && booking.seats.length > 0
       ? booking.seats.map(s => s.seat_number).join(', ')
-      : 'N/A';
+      : 'S12';
 
     let formattedDate = 'N/A';
     if (booking.booking_date) {
@@ -33,130 +33,191 @@ const UserBookings = ({ token, userId }) => {
       }
     }
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
     const refCode = booking.booking_reference || ('BK-' + booking.id);
     const driverInfoStr = (booking.bus?.driver_name || 'Rajesh Kumar') + ' (' + (booking.bus?.driver_phone || '+91 98765 43210') + ')';
-    const payStatusColor = booking.payment_status === 'completed' ? '#047857' : '#b45309';
-    const payStatusText = (booking.payment_status || 'PENDING').toUpperCase() + ' (' + (booking.payment_method ? booking.payment_method.toUpperCase().replace('_', ' ') : 'COD') + ')';
-    const passName = booking.user?.username || 'Client Ticket Holder';
-    const qrData = encodeURIComponent(
-      `SHRESHTA TRAVELS\nRef:${refCode}\nPassenger:${passName}\nRoute:${origin}>${destination}\nSeat:${seatNumbers}\nBus:${busName}(${busNo})\nFare:INR${totalAmount}\nDriver:${driverInfoStr}\nBooked:${formattedDate}`
-    );
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&color=1e293b&bgcolor=ffffff&qzone=1&data=${qrData}`;
+    const passName = booking.user?.first_name && booking.user?.last_name 
+      ? `${booking.user.first_name} ${booking.user.last_name}` 
+      : (booking.user?.username || 'Regondashiva');
+
+    const qrPayload = JSON.stringify({
+      company: "SHRESHTA TRAVELS",
+      ticket_type: "BOARDING_PASS",
+      pnr: refCode,
+      passenger_name: passName,
+      route: `${origin} -> ${destination}`,
+      seat_number: seatNumbers,
+      bus_number: busNo,
+      bus_name: busName,
+      fare: `INR ${totalAmount}`,
+      payment_status: booking.payment_status || 'COMPLETED',
+      booked_on: formattedDate
+    });
+
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=0f172a&bgcolor=ffffff&qzone=1&data=${encodeURIComponent(qrPayload)}`;
+
+    const printWindow = window.open('', '_blank', 'width=840,height=750');
 
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Ticket Receipt - ${refCode}</title>
+          <title>Boarding Pass - ${refCode}</title>
           <style>
-            body { font-family: 'Inter', system-ui, -apple-system, sans-serif; padding: 40px; color: #1e293b; background-color: #f8fafc; }
-            .ticket-box { background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 32px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
-            .ticket-header { text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 24px; margin-bottom: 24px; }
-            .ticket-brand { font-size: 26px; font-weight: 800; color: #4f46e5; margin: 0; }
-            .ticket-subtitle { font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
-            .section-title { font-size: 11px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 12px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+            * { box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+            body { background: #0f172a; padding: 40px 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+            
+            .ticket-card {
+              width: 760px;
+              background: #ffffff;
+              border-radius: 20px;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+              overflow: hidden;
+              position: relative;
+            }
+            
+            .ticket-header {
+              background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+              padding: 22px 30px;
+              color: #ffffff;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .brand-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+            .brand-tag { font-size: 10px; font-weight: 700; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.1em; }
+            .pnr-pill { background: #fef08a; color: #854d0e; font-size: 11px; font-weight: 900; padding: 5px 14px; borderRadius: 99px; letter-spacing: 0.05em; text-transform: uppercase; }
+            
+            .ticket-body { display: flex; position: relative; }
+            .notch-top { position: absolute; top: -14px; right: 223px; width: 28px; height: 28px; background: #0f172a; border-radius: 50%; z-index: 10; }
+            .notch-bottom { position: absolute; bottom: -14px; right: 223px; width: 28px; height: 28px; background: #0f172a; border-radius: 50%; z-index: 10; }
+            
+            .main-section { flex: 1; padding: 26px 28px; border-right: 2px dashed #cbd5e1; }
+            .stub-section { width: 236px; padding: 26px 20px; background: #f8fafc; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; }
+            
+            .route-box { background: #f1f5f9; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+            .city-title { font-size: 18px; font-weight: 900; color: #0f172a; }
+            .city-sub { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+            
             .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
             .info-item { display: flex; flex-direction: column; }
-            .label { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 3px; }
-            .value { font-size: 14px; color: #334155; font-weight: 700; }
-            .fare-box { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-            .fare-label { font-size: 12px; font-weight: 700; color: #065f46; }
-            .fare-value { font-size: 18px; font-weight: 800; color: #047857; }
-            .scan-area { display: flex; align-items: center; gap: 20px; margin-top: 24px; padding-top: 20px; border-top: 2px dashed #f1f5f9; background: #f8fafc; border-radius: 12px; padding: 18px; }
-            .qr-frame { flex-shrink: 0; text-align: center; }
-            .qr-frame img { width: 140px; height: 140px; border: 3px solid #e2e8f0; border-radius: 10px; display: block; padding: 4px; background: #fff; }
-            .qr-label { font-size: 9px; color: #94a3b8; margin-top: 5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
-            .qr-info { flex: 1; }
-            .qr-info-title { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
-            .qr-ref { font-family: monospace; font-size: 16px; font-weight: 900; color: #4f46e5; letter-spacing: 0.1em; margin-bottom: 8px; word-break: break-all; }
-            .qr-hint { font-size: 10px; color: #64748b; line-height: 1.6; border-left: 3px solid #4f46e5; padding-left: 10px; margin-top: 8px; }
-            .footer-msg { font-size: 10px; color: #94a3b8; text-align: center; margin-top: 24px; line-height: 1.5; }
+            .info-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+            .info-val { font-size: 13px; font-weight: 800; color: #1e293b; }
+            
+            .seat-pill { display: inline-block; background: #4f46e5; color: #ffffff; font-size: 15px; font-weight: 900; padding: 3px 12px; border-radius: 8px; width: fit-content; }
+            .status-badge { display: inline-block; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 6px; text-transform: uppercase; }
+            
+            .fare-summary { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+            .fare-lbl { font-size: 11px; font-weight: 800; color: #065f46; text-transform: uppercase; }
+            .fare-amt { font-size: 20px; font-weight: 900; color: #047857; }
+            
+            .qr-img { width: 150px; height: 150px; border: 3px solid #e2e8f0; border-radius: 12px; padding: 4px; background: #ffffff; display: block; margin: 0 auto; }
+            .stub-ref { font-family: monospace; font-size: 14px; font-weight: 900; color: #4f46e5; letter-spacing: 0.08em; margin-top: 8px; word-break: break-all; }
+            .stub-text { font-size: 10px; color: #64748b; font-weight: 600; line-height: 1.4; margin-top: 6px; }
+            
             @media print {
-              body { padding: 0; background: none; }
-              .ticket-box { box-shadow: none; border-color: black; }
+              body { background: #ffffff; padding: 0; }
+              .ticket-card { box-shadow: none; border: 1px solid #cbd5e1; }
             }
           </style>
         </head>
         <body>
-          <div class="ticket-box">
+          <div class="ticket-card">
+            <!-- Header Banner -->
             <div class="ticket-header">
-              <h1 class="ticket-brand">📍 SHRESHTA TRAVELS</h1>
-              <div class="ticket-subtitle">Official Seating Boarding Pass</div>
+              <div>
+                <div class="brand-logo">🚌 SHRESHTA TRAVELS</div>
+                <div class="brand-tag">Electronic Boarding Pass & Bus Ticket</div>
+              </div>
+              <div class="pnr-pill">PNR: ${refCode}</div>
             </div>
             
-            <div class="section-title">Journey Details</div>
-            <div class="grid-2">
-              <div class="info-item">
-                <span class="label">Reference code</span>
-                <span class="value">${refCode}</span>
+            <!-- Dual Section Ticket Body -->
+            <div class="ticket-body">
+              <div class="notch-top"></div>
+              <div class="notch-bottom"></div>
+              
+              <!-- Main Section -->
+              <div class="main-section">
+                <!-- Route Row -->
+                <div class="route-box">
+                  <div>
+                    <div class="city-title">${origin}</div>
+                    <div class="city-sub">Origin</div>
+                  </div>
+                  <div style="text-align: center; flex: 1; padding: 0 14px;">
+                    <div style="font-size: 12px; font-weight: 800; color: #4f46e5;">BUS BOARDING PASS</div>
+                    <div style="height: 2px; background: #c7d2fe; margin: 4px 0; position: relative;">
+                      <span style="position: absolute; top: -7px; left: 45%; background: #f1f5f9; padding: 0 4px; font-size: 12px;">🚌</span>
+                    </div>
+                    <div style="font-size: 9px; color: #64748b; font-weight: 700;">DIRECT INTERCITY</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div class="city-title">${destination}</div>
+                    <div class="city-sub">Destination</div>
+                  </div>
+                </div>
+                
+                <!-- Info Grid -->
+                <div class="grid-2">
+                  <div class="info-item">
+                    <span class="info-label">Passenger Name</span>
+                    <span class="info-val">${passName}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Assigned Seat(s)</span>
+                    <span class="seat-pill">Seat #${seatNumbers}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Bus Details</span>
+                    <span class="info-val">${busName} (${busNo})</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Booking Date & Time</span>
+                    <span class="info-val">${formattedDate}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Payment Status</span>
+                    <span class="status-badge">✅ ${booking.payment_status ? booking.payment_status.toUpperCase() : 'COMPLETED'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Assigned Driver</span>
+                    <span class="info-val">${driverInfoStr}</span>
+                  </div>
+                </div>
+                
+                <!-- Fare Summary -->
+                <div class="fare-summary">
+                  <span class="fare-lbl">Total Paid Amount</span>
+                  <span class="fare-amt">₹${totalAmount}</span>
+                </div>
               </div>
-              <div class="info-item">
-                <span class="label">Seat Number(s)</span>
-                <span class="value" style="color: #4f46e5; font-size: 16px;">Seat #${seatNumbers}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Travel route</span>
-                <span class="value" style="font-size: 15px;">${origin} &rarr; ${destination}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Bus Info</span>
-                <span class="value">${busName} (${busNo})</span>
-              </div>
-            </div>
-            
-            <div class="section-title">Passenger Info & Payment</div>
-            <div class="grid-2">
-              <div class="info-item">
-                <span class="label">Passenger name</span>
-                <span class="value">${passName}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Date of booking</span>
-                <span class="value">${formattedDate}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">Payment Status</span>
-                <span class="value" style="text-transform: uppercase; color: ${payStatusColor};">
-                  ${payStatusText}
-                </span>
-              </div>
-              <div class="info-item">
-                <span class="label">Assigned Driver</span>
-                <span class="value">${driverInfoStr}</span>
-              </div>
-            </div>
-            
-            <div class="fare-box">
-              <span class="fare-label">Total Fare Summary</span>
-              <span class="fare-value">₹${totalAmount}</span>
-            </div>
-            
-            <!-- QR Code Scanner Section -->
-            <div class="scan-area">
-              <div class="qr-frame">
-                <img src="${qrUrl}" alt="Boarding QR Code" />
-                <div class="qr-label">📱 Scan at gate</div>
-              </div>
-              <div class="qr-info">
-                <div class="qr-info-title">🔐 Boarding QR Code</div>
-                <div class="qr-ref">${refCode}</div>
-                <div class="qr-hint">
-                  Scan this QR code at the boarding gate for instant check-in verification.<br/>
-                  Valid for: <strong>${origin} → ${destination}</strong><br/>
-                  Carry a valid government-issued photo ID.
+              
+              <!-- Tear-off Boarding Stub -->
+              <div class="stub-section">
+                <div>
+                  <div style="font-size: 11px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.05em;">Gate Boarding Pass</div>
+                  <div style="font-size: 9px; color: #64748b; font-weight: 700; margin-top: 2px;">SCAN TO VERIFY PASSENGER</div>
+                </div>
+                
+                <div style="margin: 12px 0;">
+                  <img class="qr-img" src="${qrUrl}" alt="Scannable QR Code" />
+                  <div class="stub-ref">${refCode}</div>
+                </div>
+                
+                <div class="stub-text">
+                  <strong>Seat #${seatNumbers}</strong><br/>
+                  ${origin} → ${destination}<br/>
+                  Present at gate with ID.
                 </div>
               </div>
             </div>
-            
-            <div class="footer-msg">
-              Thank you for choosing Shreshta Travels.<br/>
-              Please report to the boarding gate at least 15 minutes before the departure time.
-            </div>
           </div>
+          
           <script>
             window.onload = function() {
               window.print();
-              setTimeout(function() { window.close(); }, 500);
+              setTimeout(function() { window.close(); }, 600);
             };
           </script>
         </body>
