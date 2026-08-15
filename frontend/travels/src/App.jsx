@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { API_BASE_URL } from './config';
 // Components
 import RegisterForm from './deepcomponents/RegisterForm';
 import LoginForm from './deepcomponents/LoginForm';
@@ -9,10 +10,9 @@ import UserBookings from './deepcomponents/UserBooking';
 import Wrapper from './deepcomponents/Wrapper';
 import BookingHistory from './components/booking/BookingHistory';
 
-
 const App = () => {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [userId, setUserId] = useState(localStorage.getItem('userId'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [userId, setUserId] = useState(() => localStorage.getItem('userId'));
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('user');
     try {
@@ -22,15 +22,6 @@ const App = () => {
     }
   });
   const [selectedBusId, setSelectedBusId] = useState(null);
-
-  const handleLogin = (token, userData) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('userId', userData.id);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setToken(token);
-    setUserId(userData.id);
-    setUser(userData);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -42,6 +33,44 @@ const App = () => {
     setSelectedBusId(null);
   };
 
+  // Verify auth token & fetch user profile on app start / token change
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/api/profile/`, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            handleLogout();
+          }
+          return null;
+        }
+        return res.json();
+      })
+      .then(userData => {
+        if (userData && userData.id) {
+          localStorage.setItem('userId', userData.id);
+          localStorage.setItem('user', JSON.stringify(userData));
+          setUserId(userData.id);
+          setUser(userData);
+        }
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const handleLogin = (authToken, userData) => {
+    if (!authToken || !userData) return;
+    localStorage.setItem('token', authToken);
+    localStorage.setItem('userId', userData.id);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setToken(authToken);
+    setUserId(userData.id);
+    setUser(userData);
+  };
 
   const handleUserUpdate = (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
@@ -53,7 +82,7 @@ const App = () => {
       <Wrapper token={token} user={user} onUserUpdate={handleUserUpdate} handleLogout={handleLogout}>
         <Routes>
           {/* Public Routes */}
-          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/register" element={<RegisterForm onLogin={handleLogin} />} />
           <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
 
           {/* Protected Routes */}
@@ -63,6 +92,7 @@ const App = () => {
           {/* User Account Routes */}
           <Route path="/my-bookings" element={<UserBookings token={token} userId={userId} />} />
           <Route path="/booking-history" element={<BookingHistory />} />
+
           {/* 404 Route */}
           <Route path="*" element={
             <div className="not-found">
@@ -73,7 +103,7 @@ const App = () => {
         </Routes>
       </Wrapper>
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;

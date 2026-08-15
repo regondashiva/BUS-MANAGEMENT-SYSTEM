@@ -135,18 +135,15 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS setup with local dev and Vercel/Render frontend via environment variable
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-]
-env_cors = os.environ.get("CORS_ALLOWED_ORIGINS")
-if env_cors:
-    CORS_ALLOWED_ORIGINS.extend([origin.strip() for origin in env_cors.split(",") if origin.strip()])
-
+# CORS setup for local dev, mobile clients, and Vercel/Render production
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'authorization',
+    'x-csrftoken',
+]
 
 # CSRF trusted origins from environment variables
 CSRF_TRUSTED_ORIGINS = os.environ.get(

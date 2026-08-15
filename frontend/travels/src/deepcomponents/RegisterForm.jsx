@@ -3,7 +3,7 @@ import axios from 'axios'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { API_BASE_URL } from '../config'
 
-const RegisterForm = () => {
+const RegisterForm = ({ onLogin }) => {
     const [form, setForm] = useState({
         username: '', email: '', password: '', password_confirm: ''
     })
@@ -32,12 +32,18 @@ const RegisterForm = () => {
         }
 
         try {
-            await axios.post(`${API_BASE_URL}/api/register/`, form);
-            setMessage('Registration successful! Redirecting to login...')
-            setForm({ username: '', email: '', password: '', password_confirm: '' })
-            setTimeout(() => {
-                navigate('/login', { state: { from } })
-            }, 1500)
+            const response = await axios.post(`${API_BASE_URL}/api/register/`, form);
+            setMessage('Registration successful! Logging you in...')
+            if (onLogin && response.data?.token && response.data?.user) {
+                onLogin(response.data.token, response.data.user)
+                setTimeout(() => {
+                    navigate(from)
+                }, 800)
+            } else {
+                setTimeout(() => {
+                    navigate('/login', { state: { from } })
+                }, 1200)
+            }
 
         } catch (error) {
             console.error(error.response?.data)
