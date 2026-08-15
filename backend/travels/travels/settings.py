@@ -154,6 +154,10 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     ""
 ).split(",") if os.environ.get("CSRF_TRUSTED_ORIGINS") else []
 
+# Razorpay Credentials (Free Test Credentials for Sandbox / Test Mode)
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_5Wq2c0L0zQv23P")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "test_secret_1234567890")
+
 
 # ==============================================================================
 # DATABASE CONFIGURATION (MYSQL)

@@ -207,9 +207,116 @@ const UserBookings = ({ token, userId }) => {
       });
   }, [token, userId, navigate]);
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRazorpayPayment = async (bookingToPay) => {
+    const booking = bookingToPay || payModalBooking;
+    if (!booking) return;
+    setIsPaying(true);
+    setPayMessage({ type: 'info', text: 'Launching Razorpay Gateway...' });
+
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded) {
+      setPayMessage({ type: 'error', text: 'Razorpay SDK failed to load. Check network.' });
+      setIsPaying(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${booking.id}/create_razorpay_order/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const orderData = await res.json();
+      if (!res.ok) {
+        setPayMessage({ type: 'error', text: orderData.error || 'Failed to create Razorpay order.' });
+        setIsPaying(false);
+        return;
+      }
+
+      const options = {
+        key: orderData.key_id || 'rzp_test_5Wq2c0L0zQv23P',
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'SHRESHTA TRAVELS',
+        description: `Ticket #${orderData.booking_reference || booking.id}`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch(`${API_BASE_URL}/api/bookings/${booking.id}/verify_razorpay_payment/`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Token ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+            if (verifyRes.ok) {
+              setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, payment_status: 'completed', payment_method: 'razorpay' } : b));
+              setPayMessage({ type: 'success', text: 'Razorpay Payment Successful! 🎉 Ticket Confirmed.' });
+              setTimeout(() => {
+                setPayModalBooking(null);
+                setPayMessage(null);
+              }, 1200);
+            } else {
+              setPayMessage({ type: 'error', text: 'Razorpay verification failed.' });
+            }
+          } catch (e) {
+            setPayMessage({ type: 'error', text: 'Error verifying payment.' });
+          } finally {
+            setIsPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPaying(false);
+            setPayMessage({ type: 'error', text: 'Razorpay payment cancelled.' });
+          }
+        },
+        prefill: {
+          name: 'Passenger',
+          email: 'passenger@travels.com',
+          contact: '9876543210'
+        },
+        theme: {
+          color: '#6366f1'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      setPayMessage({ type: 'error', text: 'Error launching Razorpay.' });
+      setIsPaying(false);
+    }
+  };
+
   const handleProcessPayment = async (e) => {
     e.preventDefault();
     if (!payModalBooking) return;
+    if (payMethod === 'razorpay') {
+      handleRazorpayPayment(payModalBooking);
+      return;
+    }
     setIsPaying(true);
     setPayMessage(null);
     try {
@@ -899,9 +1006,9 @@ const UserBookings = ({ token, userId }) => {
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
                 {[
-                  { id: 'upi', label: 'UPI / GPay', icon: '📱' },
+                  { id: 'razorpay', label: 'Razorpay (Cards/UPI)', icon: '⚡' },
+                  { id: 'upi', label: 'Direct UPI', icon: '📱' },
                   { id: 'card', label: 'Credit/Debit Card', icon: '💳' },
-                  { id: 'netbanking', label: 'Net Banking', icon: '🏦' },
                   { id: 'cod', label: 'Pay at Bus (COD)', icon: '💵' },
                 ].map(method => (
                   <div

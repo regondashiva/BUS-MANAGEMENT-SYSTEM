@@ -328,9 +328,9 @@ const BusSeats = ({ token }) => {
                                 <div style={{ fontSize: '10px', color: '#4f46e5', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Payment Method</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '7px' }}>
                                     {[
+                                        { id: 'razorpay', label: 'Razorpay', icon: '⚡' },
                                         { id: 'upi', label: 'UPI', icon: '📱' },
-                                        { id: 'credit_card', label: 'Credit Card', icon: '💳' },
-                                        { id: 'debit_card', label: 'Debit Card', icon: '🏦' },
+                                        { id: 'card', label: 'Card', icon: '💳' },
                                         { id: 'net_banking', label: 'Net Banking', icon: '🌐' },
                                         { id: 'cod', label: 'Cash on Board', icon: '💵' },
                                     ].map(p => {
