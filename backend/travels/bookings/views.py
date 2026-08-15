@@ -168,54 +168,109 @@ class BookingViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user).select_related('bus', 'user').order_by('-booking_date')
+        return Booking.objects.filter(user=self.request.user).select_related('bus', 'user').prefetch_related('seats').order_by('-booking_date')
     
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        seat_ids = data.get('seat_ids', [])
+        bus_id = data.get('bus_id')
+        
+        if not seat_ids or not bus_id:
+            return Response(
+                {'error': 'Seat IDs and bus ID are required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            bus = Bus.objects.get(id=bus_id)
+            seats = Seat.objects.filter(id__in=seat_ids, is_booked=False, bus=bus)
+            
+            if len(seats) != len(seat_ids):
+                return Response(
+                    {'error': 'One or more seats are already booked'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            # Generate booking reference
+            booking_ref = 'BK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            
+            # Create booking
+            payment_method = data.get('payment_method', 'cod')
+            payment_status = 'completed' if payment_method in ['upi', 'card', 'netbanking'] else 'pending'
+            booking = Booking.objects.create(
+                user=request.user,
+                bus=bus,
+                booking_reference=booking_ref,
+                journey_date=bus.departure_time.date(),
+                total_amount=bus.price * len(seats),
+                status='confirmed',
+                payment_method=payment_method,
+                payment_status=payment_status
+            )
+            booking.seats.set(seats)
+            
+            # Mark seats as booked
+            seats.update(is_booked=True)
+            
+            serializer = self.get_serializer(booking)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Bus.DoesNotExist:
+            return Response(
+                {'error': 'Bus not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['post'])
+    def pay(self, request, pk=None):
+        """Process or complete payment for a booking"""
+        try:
+            booking = self.get_object()
+            payment_method = request.data.get('payment_method', booking.payment_method or 'upi')
+            booking.payment_status = 'completed'
+            booking.payment_method = payment_method
+            booking.save()
+            serializer = self.get_serializer(booking)
+            return Response({
+                'status': 'success',
+                'message': 'Payment processed successfully 🎉',
+                'booking': serializer.data
+            })
+        except Booking.DoesNotExist:
+            return Response(
+                {'error': 'Booking not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """Cancel a booking"""
-        booking = self.get_object()
-        
-        if booking.user != request.user:
+        try:
+            booking = self.get_object()
+            if booking.status == 'cancelled':
+                return Response(
+                    {'error': 'Booking is already cancelled'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            booking.cancel()
+            return Response({'status': 'Booking cancelled successfully'})
+            
+        except Booking.DoesNotExist:
             return Response(
-                {'error': 'You do not have permission to cancel this booking'},
-                status=status.HTTP_403_FORBIDDEN
+                {'error': 'Booking not found'}, 
+                status=status.HTTP_404_NOT_FOUND
             )
-        
-        success, message = booking.cancel()
-        if success:
-            return Response({
-                'status': 'success',
-                'message': message,
-                'refund_amount': booking.refund_amount
-            })
-        return Response(
-            {'status': 'error', 'message': message},
-            status=status.HTTP_400_BAD_REQUEST
-        )
     
     @action(detail=False, methods=['get'])
     def upcoming(self, request):
         """Get user's upcoming bookings"""
-        from django.utils import timezone
         now = timezone.now()
         
         bookings = self.get_queryset().filter(
             status__in=['confirmed', 'pending'],
             journey_date__gte=now.date()
         ).order_by('journey_date', 'departure_time')
-        
-        # Include bookings for today that haven't departed yet
-        today_bookings = self.get_queryset().filter(
-            journey_date=now.date(),
-            departure_time__gt=now.time(),
-            status__in=['confirmed', 'pending']
-        ).order_by('departure_time')
-        
-        # Combine and remove duplicates
-        bookings = (bookings | today_bookings).distinct()
         
         page = self.paginate_queryset(bookings)
         if page is not None:
@@ -228,15 +283,12 @@ class BookingViewSet(ModelViewSet):
     @action(detail=False, methods=['get'])
     def past(self, request):
         """Get user's past bookings"""
-        from django.utils import timezone
         now = timezone.now()
         
-        # Get past journeys (before today or today's completed journeys)
         past_bookings = self.get_queryset().filter(
             Q(journey_date__lt=now.date()) |
-            Q(journey_date=now.date(), departure_time__lt=now.time()) |
             Q(status__in=['cancelled', 'completed', 'no_show'])
-        ).order_by('-journey_date', '-departure_time')
+        ).order_by('-journey_date')
         
         page = self.paginate_queryset(past_bookings)
         if page is not None:
@@ -269,7 +321,7 @@ class BookingView(APIView):
     def post(self, request):
         seat_id = request.data.get('seat')
         try:
-            seat = Seat.objects.get(id = seat_id)
+            seat = Seat.objects.get(id=seat_id)
             if seat.is_booked:
                 return Response({'error': 'Seat already booked'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -277,123 +329,22 @@ class BookingView(APIView):
             seat.save()
 
             bookings = Booking.objects.create(
-                user = request.user,
-                bus = seat.bus,
-                seat = seat
+                user=request.user,
+                bus=seat.bus,
+                seat=seat
             )
             serializer = BookingSerializer(bookings)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Seat.DoesNotExist:
-            return Response({'error':'Invalid Seat ID'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid Seat ID'}, status=status.HTTP_400_BAD_REQUEST)
         
 class UserBookingView(APIView):
-    permission_classes= [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
         if request.user.id != user_id:
-            return Response({'error':'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         
-        bookings = Booking.objects.filter(user_id= user_id)
+        bookings = Booking.objects.filter(user_id=user_id).select_related('bus', 'user').prefetch_related('seats').order_by('-booking_date')
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data)
-        queryset = Bus.objects.all()
-        
-        # Filtering
-        origin = self.request.query_params.get('origin')
-        destination = self.request.query_params.get('destination')
-        journey_date = self.request.query_params.get('journey_date')
-        bus_type = self.request.query_params.get('bus_type')
-        min_price = self.request.query_params.get('min_price')
-        max_price = self.request.query_params.get('max_price')
-        
-        if origin:
-            queryset = queryset.filter(origin__icontains=origin)
-        if destination:
-            queryset = queryset.filter(destination__icontains=destination)
-        if journey_date:
-            queryset = queryset.filter(departure_time__date=journey_date)
-        if bus_type:
-            queryset = queryset.filter(bus_type=bus_type)
-        if min_price:
-            queryset = queryset.filter(price__gte=min_price)
-        if max_price:
-            queryset = queryset.filter(price__lte=max_price)
-            
-        return queryset
-
-class BookingViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    serializer_class = BookingSerializer
-    
-    def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user)
-    
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        seat_ids = data.get('seat_ids', [])
-        bus_id = data.get('bus_id')
-        
-        if not seat_ids or not bus_id:
-            return Response(
-                {'error': 'Seat IDs and bus ID are required'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        try:
-            bus = Bus.objects.get(id=bus_id)
-            seats = Seat.objects.filter(id__in=seat_ids, is_booked=False, bus=bus)
-            
-            if len(seats) != len(seat_ids):
-                return Response(
-                    {'error': 'One or more seats are already booked'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-                
-            # Generate booking reference
-            booking_ref = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            
-            # Create booking
-            payment_method = data.get('payment_method', 'cod')
-            payment_status = 'pending' if payment_method == 'cod' else 'completed'
-            booking = Booking.objects.create(
-                user=request.user,
-                bus=bus,
-                booking_reference=booking_ref,
-                journey_date=bus.departure_time.date(),
-                total_amount=bus.price * len(seats),
-                status='confirmed',
-                payment_method=payment_method,
-                payment_status=payment_status
-            )
-            booking.seats.set(seats)
-            
-            # Mark seats as booked
-            seats.update(is_booked=True)
-            
-            serializer = self.get_serializer(booking)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
-        except Bus.DoesNotExist:
-            return Response(
-                {'error': 'Bus not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-    
-    @action(detail=True, methods=['post'])
-    def cancel(self, request, pk=None):
-        try:
-            booking = self.get_queryset().get(id=pk)
-            if booking.status == 'cancelled':
-                return Response(
-                    {'error': 'Booking is already cancelled'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-                
-            booking.cancel()
-            return Response({'status': 'Booking cancelled successfully'})
-            
-        except Booking.DoesNotExist:
-            return Response(
-                {'error': 'Booking not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )

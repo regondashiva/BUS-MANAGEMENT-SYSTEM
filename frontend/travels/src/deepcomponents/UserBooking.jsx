@@ -165,31 +165,101 @@ const UserBookings = ({ token, userId }) => {
     printWindow.document.close();
   };
 
-  useEffect(() => {
-    if (!token || !userId) return;
+  const [payModalBooking, setPayModalBooking] = useState(null);
+  const [payMethod, setPayMethod] = useState('upi');
+  const [isPaying, setIsPaying] = useState(false);
+  const [payMessage, setPayMessage] = useState(null);
+  const [upiIdInput, setUpiIdInput] = useState('');
 
-    fetch(`${API_BASE_URL}/api/user/${userId}/bookings/`, {
+  useEffect(() => {
+    if (!token) {
+      navigate('/login', { state: { from: '/my-bookings' } });
+      return;
+    }
+
+    const fetchUrl = userId 
+      ? `${API_BASE_URL}/api/user/${userId}/bookings/`
+      : `${API_BASE_URL}/api/bookings/`;
+
+    fetch(fetchUrl, {
       headers: {
-        Authorization: `Token ${token}`,
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
       },
     })
       .then((res) => {
         if (!res.ok) {
-          throw new Error('Failed to fetch bookings');
+          // Fallback to /api/bookings/ if user specific route 404s
+          return fetch(`${API_BASE_URL}/api/bookings/`, {
+            headers: { 'Authorization': `Token ${token}` }
+          }).then(r => r.json());
         }
         return res.json();
       })
       .then((data) => {
-        console.log('Bookings Data:', data);
-        setBookings(data);
+        setBookings(Array.isArray(data) ? data : (data.results || []));
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        setError(err.message);
+        setError(err.message || 'Failed to fetch bookings');
         setLoading(false);
       });
-  }, [token, userId]);
+  }, [token, userId, navigate]);
+
+  const handleProcessPayment = async (e) => {
+    e.preventDefault();
+    if (!payModalBooking) return;
+    setIsPaying(true);
+    setPayMessage(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bookings/${payModalBooking.id}/pay/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({ payment_method: payMethod })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setPayMessage({ type: 'success', text: 'Payment Successful! 🎉 Ticket Confirmed.' });
+        setBookings(prev => prev.map(b => b.id === payModalBooking.id ? { ...b, payment_status: 'completed', payment_method: payMethod } : b));
+        setTimeout(() => {
+          setPayModalBooking(null);
+          setPayMessage(null);
+        }, 1200);
+      } else {
+        setPayMessage({ type: 'error', text: data.error || 'Payment failed. Please try again.' });
+      }
+    } catch (err) {
+      setPayMessage({ type: 'error', text: 'Network error processing payment.' });
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+        alert('Booking cancelled successfully.');
+      } else {
+        const data = await response.json();
+        alert(data.error || data.message || 'Failed to cancel booking.');
+      }
+    } catch (err) {
+      alert('Error cancelling booking.');
+    }
+  };
 
   if (loading) {
     return (
@@ -211,6 +281,12 @@ const UserBookings = ({ token, userId }) => {
       <div style={{ padding: '40px 24px', textAlign: 'center', color: '#dc2626' }}>
         <div style={{ fontSize: '40px', marginBottom: '12px' }}>⚠️</div>
         <p style={{ fontSize: '16px', fontWeight: 600 }}>Error: {error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{ marginTop: '12px', padding: '8px 16px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -380,15 +456,15 @@ const UserBookings = ({ token, userId }) => {
                     >
                       🛠️ {helpBookingId === booking.id ? 'Hide Support' : 'Support'}
                     </button>
-                    {booking.status === 'pending' && (
+                    {(booking.payment_status === 'pending' || booking.payment_status !== 'completed') && booking.status !== 'cancelled' && (
                       <button
                         style={{
                           padding: '6px 14px', background: 'linear-gradient(135deg,#10b981,#059669)',
                           border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: 700,
                           color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
                         }}
-                        onClick={() => alert('Proceeding to pay... 💳')}
-                      >Pay Now</button>
+                        onClick={() => { setPayModalBooking(booking); setPayMessage(null); }}
+                      >💳 Pay Now</button>
                     )}
                     {booking.status === 'confirmed' && (
                       <>
@@ -411,6 +487,14 @@ const UserBookings = ({ token, userId }) => {
                             display: 'inline-flex', alignItems: 'center', gap: '4px',
                           }}
                         >📍 {trackingBookingId === booking.id ? 'Hide' : 'Track Live'}</button>
+                        <button
+                          onClick={() => handleCancelBooking(booking.id)}
+                          style={{
+                            padding: '6px 12px', background: '#fef2f2', border: '1px solid #fca5a5',
+                            borderRadius: '8px', fontSize: '11px', fontWeight: 700, color: '#dc2626',
+                            cursor: 'pointer'
+                          }}
+                        >❌ Cancel</button>
                       </>
                     )}
                   </div>
@@ -757,9 +841,137 @@ const UserBookings = ({ token, userId }) => {
             );
           })}
         </div>
-      )
-      }
-    </div >
+      )}
+
+      {/* ── Payment Modal Overlay ── */}
+      {payModalBooking && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000, padding: '16px'
+        }}>
+          <div style={{
+            background: '#ffffff', borderRadius: '24px', width: '100%',
+            maxWidth: '460px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+            border: '1px solid #e2e8f0', overflow: 'hidden'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '20px 24px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc'
+            }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b', margin: 0 }}>
+                  Complete Payment
+                </h3>
+                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                  Ref: #{payModalBooking.booking_reference || `BK-${payModalBooking.id}`}
+                </span>
+              </div>
+              <button
+                onClick={() => { setPayModalBooking(null); setPayMessage(null); }}
+                style={{ background: 'none', border: 'none', fontSize: '20px', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleProcessPayment} style={{ padding: '24px' }}>
+              {/* Fare Summary */}
+              <div style={{
+                background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '14px',
+                padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: '20px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Amount Payable</div>
+                  <div style={{ fontSize: '13px', color: '#334155', fontWeight: 600 }}>{payModalBooking.bus?.bus_name || 'Express Bus'}</div>
+                </div>
+                <div style={{ fontSize: '24px', fontWeight: 900, color: '#15803d' }}>
+                  ₹{payModalBooking.total_amount}
+                </div>
+              </div>
+
+              {/* Payment Methods */}
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                Select Payment Method
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                {[
+                  { id: 'upi', label: 'UPI / GPay', icon: '📱' },
+                  { id: 'card', label: 'Credit/Debit Card', icon: '💳' },
+                  { id: 'netbanking', label: 'Net Banking', icon: '🏦' },
+                  { id: 'cod', label: 'Pay at Bus (COD)', icon: '💵' },
+                ].map(method => (
+                  <div
+                    key={method.id}
+                    onClick={() => setPayMethod(method.id)}
+                    style={{
+                      padding: '12px', borderRadius: '12px',
+                      border: payMethod === method.id ? '2px solid #6366f1' : '1px solid #e2e8f0',
+                      background: payMethod === method.id ? '#e0e7ff' : '#fff',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '18px' }}>{method.icon}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: payMethod === method.id ? '#4338ca' : '#475569' }}>
+                      {method.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Dynamic method details */}
+              {payMethod === 'upi' && (
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>UPI ID (e.g. name@upi)</label>
+                  <input
+                    type="text"
+                    placeholder="username@okaxis"
+                    value={upiIdInput}
+                    onChange={e => setUpiIdInput(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              )}
+
+              {/* Status Message */}
+              {payMessage && (
+                <div style={{
+                  marginBottom: '16px', padding: '10px 14px', borderRadius: '10px',
+                  fontSize: '13px', fontWeight: 600,
+                  background: payMessage.type === 'success' ? '#f0fdf4' : '#fef2f2',
+                  border: `1px solid ${payMessage.type === 'success' ? '#bbf7d0' : '#fca5a5'}`,
+                  color: payMessage.type === 'success' ? '#15803d' : '#dc2626'
+                }}>
+                  {payMessage.text}
+                </div>
+              )}
+
+              {/* Footer Actions */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => { setPayModalBooking(null); setPayMessage(null); }}
+                  style={{ padding: '10px 18px', borderRadius: '10px', border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPaying}
+                  style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: isPaying ? '#a5b4fc' : 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: isPaying ? 'not-allowed' : 'pointer', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}
+                >
+                  {isPaying ? 'Processing...' : `Pay ₹${payModalBooking.total_amount} Now`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
